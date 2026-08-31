@@ -1,39 +1,55 @@
-# CSE 110 Emu Defense
+# Emu War Game
 
-`CSE 110 Emu Defense` is a fast-paced browser strategy game where you defend a wheat farm from relentless emu attacks.
+A fast-paced browser strategy game where you defend a wheat farm from relentless emu attacks.
+
+Inspired by the historical Great Emu War, this project blends resource management, real-time defense, and arcade mini-games into a single survival run. Built with TypeScript, Vite, and Konva.
 
 ## Live Demo
 
-Play now:
+**[Play the game](https://lllcr6.github.io/Emu-Defense-cse-110-project/)**
 
-[https://lllcr6.github.io/Emu-Defense-cse-110-project/](https://lllcr6.github.io/Emu-Defense-cse-110-project/)
+## Overview
 
-## About
+Set on a struggling wheat farm during the Great Emu War, you balance growing crops, upgrading defenses, and raiding emu territory to survive as many days as possible. Each day brings new threats, events, and choices that shape how long your farm lasts.
 
-Set on a struggling wheat farm during the Great Emu War, the game blends resource management, real-time defense, and mini-games into one chaotic survival run. Grow crops, build and upgrade defenses, raid emu territory, and keep your farm alive for as many days as you can.
+## Features
 
-## Gameplay
+- **Farm defense** — Protect every crop from an escalating emu swarm.
+- **Resource management** — Earn money, plant crops, and invest in upgradeable defenses.
+- **Mini-games** — Hunt emus and launch raids to earn rewards between waves.
+- **Daily quiz** — Answer trivia questions to unlock helpful bonuses.
+- **Leaderboard** — Track your best runs locally.
 
-- Defend every crop on your farm from the emu swarm.
-- Manage money, crops, and upgradeable defenses across each day.
-- Enter hunting and raid mini-games to earn rewards.
-- Answer the daily quiz to unlock helpful bonuses.
-- Track your best runs with the built-in leaderboard.
+## How to Play
 
-## How To Play
+1. Start a new run from the main menu.
+2. Protect the farm, expand your defenses, and survive each day.
+3. Use mini-games and daily rewards to stay ahead of the emus.
 
-- Start a new run from the main menu.
-- Protect the farm, expand and upgrade your defenses, and survive each day.
-- Use mini-games and rewards to stay one step ahead of the emus.
+## Tech Stack
 
-## Requirements
+| Layer | Tools |
+|-------|-------|
+| Language | TypeScript |
+| Build | Vite |
+| Rendering | Konva (2D canvas) |
+| Testing | Vitest |
 
-- Node.js
-- npm
+## Architecture
 
-## Run Locally
+The game follows an MVC-style pattern with clear separation between screens, components, and shared game state:
 
-Install the dependencies:
+- **`src/screens/`** — Full-screen game phases (farm, hunting, raids, menus, game over)
+- **`src/components/`** — Reusable entities (emus, defenses, bullets, player)
+- **`src/controllers/`** — Shared game logic (status, quiz)
+- **`src/services/`** — Cross-cutting concerns (audio)
+- **`public/`** — Static assets (images, audio)
+
+## Getting Started
+
+**Requirements:** Node.js and npm
+
+Install dependencies:
 
 ```bash
 npm install
@@ -45,46 +61,18 @@ Start the development server:
 npm run dev
 ```
 
-Vite will print a local URL in the terminal. Open that address in your browser to play the game.
+Vite will print a local URL in the terminal. Open it in your browser to play.
 
-## Build for Production
+## Scripts
 
-Create a production-ready build:
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start the Vite dev server |
+| `npm run build` | Type-check and build for production |
+| `npm run preview` | Preview the production build locally |
+| `npm run test` | Run the test suite |
+| `npm run test:ui` | Open the interactive Vitest UI |
 
-```bash
-npm run build
-```
+## License
 
-## Preview the Production Build
-
-After building, preview the production version locally:
-
-```bash
-npm run preview
-```
-
-## Testing
-
-Run the test suite:
-
-```bash
-npm run test
-```
-
-Open the interactive Vitest UI:
-
-```bash
-npm run test:ui
-```
-
-## Project Structure
-
-- `src/` contains the game logic, controllers, views, and screens
-- `public/` contains static assets such as audio files and images
-- `package.json` defines the available scripts
-
-## Tech Stack
-
-- TypeScript
-- Vite
-- Konva
+See [LICENSE](LICENSE) for details.
