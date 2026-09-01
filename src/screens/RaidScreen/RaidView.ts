@@ -21,18 +21,23 @@ function tileColor(type: number): string {
 	return TILE_COLORS[type] ?? TILE_COLORS[TILE_TYPE.PATH];
 }
 
-function renderMazeCanvas(layout: number[][]): HTMLCanvasElement {
-	const canvas = document.createElement("canvas");
-	canvas.width = MAZE_PIXEL_WIDTH;
-	canvas.height = MAZE_PIXEL_HEIGHT;
-	const ctx = canvas.getContext("2d");
-	if (!ctx) return canvas;
+function drawMazeToContext(
+	ctx: CanvasRenderingContext2D,
+	layout: number[][],
+): void {
+	ctx.imageSmoothingEnabled = false;
 
 	for (let y = 0; y < MAZE_HEIGHT; y++) {
 		for (let x = 0; x < MAZE_WIDTH; x++) {
 			const type = layout[y][x];
 			ctx.fillStyle = tileColor(type);
-			ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+			// +1px overlap prevents hairline gaps when the GPU scales the layer.
+			ctx.fillRect(
+				x * TILE_SIZE,
+				y * TILE_SIZE,
+				TILE_SIZE + 1,
+				TILE_SIZE + 1,
+			);
 
 			if (type === TILE_TYPE.EGG) {
 				const cx = x * TILE_SIZE + TILE_SIZE / 2;
@@ -55,8 +60,6 @@ function renderMazeCanvas(layout: number[][]): HTMLCanvasElement {
 
 	ctx.fillStyle = "rgba(25, 25, 112, 0.3)";
 	ctx.fillRect(0, 0, MAZE_PIXEL_WIDTH, MAZE_PIXEL_HEIGHT);
-
-	return canvas;
 }
 
 export class RaidView implements View {
@@ -65,7 +68,8 @@ export class RaidView implements View {
 	private eggCountText: Konva.Text;
 	private player: Konva.Rect;
 	private mazeGroup: Konva.Group;
-	private mazeImage: Konva.Image | null = null;
+	private mazeShape: Konva.Shape | null = null;
+	private mazeLayout: number[][] = [];
 	
 	// Popups
 	private popupGroup: Konva.Group;
@@ -77,23 +81,17 @@ export class RaidView implements View {
 
 	constructor(onIntroStartClick: () => void) {
 		this.group = new Konva.Group({ visible: false });
+
+		// Opaque backdrop so nothing white bleeds through at tile seams.
+		this.group.add(new Konva.Rect({
+			width: STAGE_WIDTH,
+			height: STAGE_HEIGHT,
+			fill: "#2a1f14",
+			listening: false,
+		}));
+
 		this.mazeGroup = new Konva.Group({ y: MAZE_OFFSET_Y });
 		this.group.add(this.mazeGroup);
-
-		// Letterbox bars above/below the maze
-		this.group.add(new Konva.Rect({
-			width: STAGE_WIDTH,
-			height: MAZE_OFFSET_Y,
-			fill: "#2a1f14",
-			listening: false,
-		}));
-		this.group.add(new Konva.Rect({
-			y: MAZE_OFFSET_Y + MAZE_PIXEL_HEIGHT,
-			width: STAGE_WIDTH,
-			height: MAZE_OFFSET_Y,
-			fill: "#2a1f14",
-			listening: false,
-		}));
 
 		// Timer UI
 		this.timerText = new Konva.Text({
@@ -228,17 +226,26 @@ export class RaidView implements View {
 	}
 
 	drawMaze(layout: number[][]): void {
-		this.mazeImage?.destroy();
+		this.mazeLayout = layout;
 
-		const canvas = renderMazeCanvas(layout);
-		this.mazeImage = new Konva.Image({
-			image: canvas,
-			width: MAZE_PIXEL_WIDTH,
-			height: MAZE_PIXEL_HEIGHT,
-			listening: false,
-		});
-		this.mazeGroup.add(this.mazeImage);
-		this.mazeGroup.getLayer()?.draw();
+		if (!this.mazeShape) {
+			this.mazeShape = new Konva.Shape({
+				width: MAZE_PIXEL_WIDTH,
+				height: MAZE_PIXEL_HEIGHT,
+				listening: false,
+				imageSmoothingEnabled: false,
+				sceneFunc: (context, shape) => {
+					const ctx = context._context as CanvasRenderingContext2D;
+					drawMazeToContext(ctx, this.mazeLayout);
+					context.fillStrokeShape(shape);
+				},
+			});
+			this.mazeGroup.add(this.mazeShape);
+		} else {
+			this.mazeShape.clearCache();
+		}
+
+		this.mazeGroup.getLayer()?.batchDraw();
 	}
 
 	updatePlayerPosition(x: number, y: number): void {
