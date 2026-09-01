@@ -161,27 +161,44 @@ export class RaidView implements View {
 
 	drawMaze(layout: number[][]): void {
 		this.mazeGroup.destroyChildren();
+
+		// Solid base prevents sub-pixel gaps from showing through between tiles.
+		this.mazeGroup.add(new Konva.Rect({
+			width: STAGE_WIDTH,
+			height: STAGE_HEIGHT,
+			fill: "#8B4513",
+			listening: false,
+		}));
+
 		for (let y = 0; y < layout.length; y++) {
 			for (let x = 0; x < layout[y].length; x++) {
 				const type = layout[y][x];
 				let color = type === TILE_TYPE.WALL ? "#348C31" : "#8B4513";
 				if (type === TILE_TYPE.START) color = "#90EE90";
 				if (type === TILE_TYPE.EXIT) color = "#FF6347";
-				
+
+				const tileX = Math.floor((x * STAGE_WIDTH) / MAZE_WIDTH);
+				const tileY = Math.floor((y * STAGE_HEIGHT) / MAZE_HEIGHT);
+				const tileW =
+					Math.ceil(((x + 1) * STAGE_WIDTH) / MAZE_WIDTH) - tileX;
+				const tileH =
+					Math.ceil(((y + 1) * STAGE_HEIGHT) / MAZE_HEIGHT) - tileY;
+
 				this.mazeGroup.add(new Konva.Rect({
-					x: x * TILE_WIDTH,
-					y: y * TILE_HEIGHT,
-					width: TILE_WIDTH,
-					height: TILE_HEIGHT,
+					x: tileX,
+					y: tileY,
+					width: tileW,
+					height: tileH,
 					fill: color,
+					perfectDrawEnabled: false,
 				}));
 
 				if (type === TILE_TYPE.EGG) {
 					this.mazeGroup.add(new Konva.Ellipse({
-						x: x * TILE_WIDTH + TILE_WIDTH / 2,
-						y: y * TILE_HEIGHT + TILE_HEIGHT / 2,
-						radiusX: TILE_WIDTH / 4,
-						radiusY: TILE_HEIGHT / 3,
+						x: tileX + tileW / 2,
+						y: tileY + tileH / 2,
+						radiusX: tileW / 4,
+						radiusY: tileH / 3,
 						fill: "#FFFACD",
 					}));
 				}
