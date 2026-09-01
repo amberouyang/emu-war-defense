@@ -3,9 +3,61 @@ import type { View } from "../../types";
 import { STAGE_WIDTH, STAGE_HEIGHT } from "../../constants";
 import { TILE_TYPE, MAZE_WIDTH, MAZE_HEIGHT } from "./RaidModel";
 
-// Calculate the size of each tile to fit the stage
-const TILE_WIDTH = STAGE_WIDTH / MAZE_WIDTH;
-const TILE_HEIGHT = STAGE_HEIGHT / MAZE_HEIGHT;
+// Integer tile size so the maze maps to exact pixels (20x15 @ 40px = 800x600).
+const TILE_SIZE = 40;
+const MAZE_PIXEL_WIDTH = MAZE_WIDTH * TILE_SIZE;
+const MAZE_PIXEL_HEIGHT = MAZE_HEIGHT * TILE_SIZE;
+const MAZE_OFFSET_Y = (STAGE_HEIGHT - MAZE_PIXEL_HEIGHT) / 2;
+
+const TILE_COLORS: Record<number, string> = {
+	[TILE_TYPE.PATH]: "#8B4513",
+	[TILE_TYPE.WALL]: "#348C31",
+	[TILE_TYPE.START]: "#90EE90",
+	[TILE_TYPE.EXIT]: "#FF6347",
+	[TILE_TYPE.EGG]: "#8B4513",
+};
+
+function tileColor(type: number): string {
+	return TILE_COLORS[type] ?? TILE_COLORS[TILE_TYPE.PATH];
+}
+
+function renderMazeCanvas(layout: number[][]): HTMLCanvasElement {
+	const canvas = document.createElement("canvas");
+	canvas.width = MAZE_PIXEL_WIDTH;
+	canvas.height = MAZE_PIXEL_HEIGHT;
+	const ctx = canvas.getContext("2d");
+	if (!ctx) return canvas;
+
+	for (let y = 0; y < MAZE_HEIGHT; y++) {
+		for (let x = 0; x < MAZE_WIDTH; x++) {
+			const type = layout[y][x];
+			ctx.fillStyle = tileColor(type);
+			ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+
+			if (type === TILE_TYPE.EGG) {
+				const cx = x * TILE_SIZE + TILE_SIZE / 2;
+				const cy = y * TILE_SIZE + TILE_SIZE / 2;
+				ctx.fillStyle = "#FFFACD";
+				ctx.beginPath();
+				ctx.ellipse(
+					cx,
+					cy,
+					TILE_SIZE / 4,
+					TILE_SIZE / 3,
+					0,
+					0,
+					Math.PI * 2,
+				);
+				ctx.fill();
+			}
+		}
+	}
+
+	ctx.fillStyle = "rgba(25, 25, 112, 0.3)";
+	ctx.fillRect(0, 0, MAZE_PIXEL_WIDTH, MAZE_PIXEL_HEIGHT);
+
+	return canvas;
+}
 
 export class RaidView implements View {
 	private group: Konva.Group;
@@ -13,6 +65,7 @@ export class RaidView implements View {
 	private eggCountText: Konva.Text;
 	private player: Konva.Rect;
 	private mazeGroup: Konva.Group;
+	private mazeImage: Konva.Image | null = null;
 	
 	// Popups
 	private popupGroup: Konva.Group;
@@ -24,8 +77,23 @@ export class RaidView implements View {
 
 	constructor(onIntroStartClick: () => void) {
 		this.group = new Konva.Group({ visible: false });
-		this.mazeGroup = new Konva.Group();
+		this.mazeGroup = new Konva.Group({ y: MAZE_OFFSET_Y });
 		this.group.add(this.mazeGroup);
+
+		// Letterbox bars above/below the maze
+		this.group.add(new Konva.Rect({
+			width: STAGE_WIDTH,
+			height: MAZE_OFFSET_Y,
+			fill: "#2a1f14",
+			listening: false,
+		}));
+		this.group.add(new Konva.Rect({
+			y: MAZE_OFFSET_Y + MAZE_PIXEL_HEIGHT,
+			width: STAGE_WIDTH,
+			height: MAZE_OFFSET_Y,
+			fill: "#2a1f14",
+			listening: false,
+		}));
 
 		// Timer UI
 		this.timerText = new Konva.Text({
@@ -53,8 +121,8 @@ export class RaidView implements View {
 		this.player = new Konva.Rect({
 			x: 0,
 			y: 0,
-			width: TILE_WIDTH * 0.7,
-			height: TILE_HEIGHT * 0.7,
+			width: TILE_SIZE * 0.7,
+			height: TILE_SIZE * 0.7,
 			fill: "#4169E1",
 		});
 		this.group.add(this.player);
@@ -160,64 +228,24 @@ export class RaidView implements View {
 	}
 
 	drawMaze(layout: number[][]): void {
-		this.mazeGroup.destroyChildren();
+		this.mazeImage?.destroy();
 
-		// Solid base prevents sub-pixel gaps from showing through between tiles.
-		this.mazeGroup.add(new Konva.Rect({
-			width: STAGE_WIDTH,
-			height: STAGE_HEIGHT,
-			fill: "#8B4513",
+		const canvas = renderMazeCanvas(layout);
+		this.mazeImage = new Konva.Image({
+			image: canvas,
+			width: MAZE_PIXEL_WIDTH,
+			height: MAZE_PIXEL_HEIGHT,
 			listening: false,
-		}));
-
-		for (let y = 0; y < layout.length; y++) {
-			for (let x = 0; x < layout[y].length; x++) {
-				const type = layout[y][x];
-				let color = type === TILE_TYPE.WALL ? "#348C31" : "#8B4513";
-				if (type === TILE_TYPE.START) color = "#90EE90";
-				if (type === TILE_TYPE.EXIT) color = "#FF6347";
-
-				const tileX = Math.floor((x * STAGE_WIDTH) / MAZE_WIDTH);
-				const tileY = Math.floor((y * STAGE_HEIGHT) / MAZE_HEIGHT);
-				const tileW =
-					Math.ceil(((x + 1) * STAGE_WIDTH) / MAZE_WIDTH) - tileX;
-				const tileH =
-					Math.ceil(((y + 1) * STAGE_HEIGHT) / MAZE_HEIGHT) - tileY;
-
-				this.mazeGroup.add(new Konva.Rect({
-					x: tileX,
-					y: tileY,
-					width: tileW,
-					height: tileH,
-					fill: color,
-					perfectDrawEnabled: false,
-				}));
-
-				if (type === TILE_TYPE.EGG) {
-					this.mazeGroup.add(new Konva.Ellipse({
-						x: tileX + tileW / 2,
-						y: tileY + tileH / 2,
-						radiusX: tileW / 4,
-						radiusY: tileH / 3,
-						fill: "#FFFACD",
-					}));
-				}
-			}
-		}
-		// Night overlay
-		this.mazeGroup.add(new Konva.Rect({
-			width: STAGE_WIDTH,
-			height: STAGE_HEIGHT,
-			fill: "#191970",
-			opacity: 0.3,
-			listening: false
-		}));
+		});
+		this.mazeGroup.add(this.mazeImage);
 		this.mazeGroup.getLayer()?.draw();
 	}
 
 	updatePlayerPosition(x: number, y: number): void {
-		this.player.x(x * TILE_WIDTH + (TILE_WIDTH - this.player.width()) / 2);
-		this.player.y(y * TILE_HEIGHT + (TILE_HEIGHT - this.player.height()) / 2);
+		this.player.x(x * TILE_SIZE + (TILE_SIZE - this.player.width()) / 2);
+		this.player.y(
+			MAZE_OFFSET_Y + y * TILE_SIZE + (TILE_SIZE - this.player.height()) / 2,
+		);
 		this.group.getLayer()?.draw();
 	}
 
