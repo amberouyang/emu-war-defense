@@ -17,8 +17,21 @@ const TILE_COLORS: Record<number, string> = {
 	[TILE_TYPE.EGG]: "#8B4513",
 };
 
-function tileColor(type: number): string {
-	return TILE_COLORS[type] ?? TILE_COLORS[TILE_TYPE.PATH];
+function hexToRgb(hex: string): [number, number, number] {
+	const value = parseInt(hex.slice(1), 16);
+	return [(value >> 16) & 255, (value >> 8) & 255, value & 255];
+}
+
+const TILE_RGB: Record<number, [number, number, number]> = {
+	[TILE_TYPE.PATH]: hexToRgb(TILE_COLORS[TILE_TYPE.PATH]),
+	[TILE_TYPE.WALL]: hexToRgb(TILE_COLORS[TILE_TYPE.WALL]),
+	[TILE_TYPE.START]: hexToRgb(TILE_COLORS[TILE_TYPE.START]),
+	[TILE_TYPE.EXIT]: hexToRgb(TILE_COLORS[TILE_TYPE.EXIT]),
+	[TILE_TYPE.EGG]: hexToRgb(TILE_COLORS[TILE_TYPE.EGG]),
+};
+
+function tileRgb(type: number): [number, number, number] {
+	return TILE_RGB[type] ?? TILE_RGB[TILE_TYPE.PATH];
 }
 
 function drawMazeToContext(
@@ -27,34 +40,52 @@ function drawMazeToContext(
 ): void {
 	ctx.imageSmoothingEnabled = false;
 
+	// Write each pixel exactly once so no tile seams can appear.
+	const imageData = ctx.createImageData(MAZE_PIXEL_WIDTH, MAZE_PIXEL_HEIGHT);
+	const { data } = imageData;
+
 	for (let y = 0; y < MAZE_HEIGHT; y++) {
 		for (let x = 0; x < MAZE_WIDTH; x++) {
 			const type = layout[y][x];
-			ctx.fillStyle = tileColor(type);
-			// +1px overlap prevents hairline gaps when the GPU scales the layer.
-			ctx.fillRect(
-				x * TILE_SIZE,
-				y * TILE_SIZE,
-				TILE_SIZE + 1,
-				TILE_SIZE + 1,
-			);
+			const tileType =
+				type === TILE_TYPE.EGG ? TILE_TYPE.PATH : type;
+			const [r, g, b] = tileRgb(tileType);
+			const startX = x * TILE_SIZE;
+			const startY = y * TILE_SIZE;
 
-			if (type === TILE_TYPE.EGG) {
-				const cx = x * TILE_SIZE + TILE_SIZE / 2;
-				const cy = y * TILE_SIZE + TILE_SIZE / 2;
-				ctx.fillStyle = "#FFFACD";
-				ctx.beginPath();
-				ctx.ellipse(
-					cx,
-					cy,
-					TILE_SIZE / 4,
-					TILE_SIZE / 3,
-					0,
-					0,
-					Math.PI * 2,
-				);
-				ctx.fill();
+			for (let py = 0; py < TILE_SIZE; py++) {
+				const row = ((startY + py) * MAZE_PIXEL_WIDTH + startX) * 4;
+				for (let px = 0; px < TILE_SIZE; px++) {
+					const i = row + px * 4;
+					data[i] = r;
+					data[i + 1] = g;
+					data[i + 2] = b;
+					data[i + 3] = 255;
+				}
 			}
+		}
+	}
+
+	ctx.putImageData(imageData, 0, 0);
+
+	for (let y = 0; y < MAZE_HEIGHT; y++) {
+		for (let x = 0; x < MAZE_WIDTH; x++) {
+			if (layout[y][x] !== TILE_TYPE.EGG) continue;
+
+			const cx = x * TILE_SIZE + TILE_SIZE / 2;
+			const cy = y * TILE_SIZE + TILE_SIZE / 2;
+			ctx.fillStyle = "#FFFACD";
+			ctx.beginPath();
+			ctx.ellipse(
+				cx,
+				cy,
+				TILE_SIZE / 4,
+				TILE_SIZE / 3,
+				0,
+				0,
+				Math.PI * 2,
+			);
+			ctx.fill();
 		}
 	}
 
@@ -244,6 +275,15 @@ export class RaidView implements View {
 		} else {
 			this.mazeShape.clearCache();
 		}
+
+		this.mazeShape.cache({
+			x: 0,
+			y: 0,
+			width: MAZE_PIXEL_WIDTH,
+			height: MAZE_PIXEL_HEIGHT,
+			pixelRatio: 1,
+			imageSmoothingEnabled: false,
+		});
 
 		this.mazeGroup.getLayer()?.batchDraw();
 	}
