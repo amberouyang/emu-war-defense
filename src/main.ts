@@ -74,6 +74,11 @@ class App implements ScreenSwitcher {
 		// Start with menu screen visible
 		this.menuController.getView().show();
 		this.audioManager.playBgm("menu");
+
+		const devScreen = new URLSearchParams(window.location.search).get("screen");
+		if (devScreen === "raid") {
+			this.switchToScreen({ type: "minigame1_raid" });
+		}
 	}
 
 	switchToScreen(screen: Screen): void {
