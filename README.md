@@ -1,4 +1,4 @@
-# Emu War Game
+# Emu War Defense
 
 A fast-paced browser strategy game where you defend a wheat farm from relentless emu attacks.
 
@@ -6,7 +6,7 @@ Inspired by the historical Great Emu War, this project blends resource managemen
 
 ## Live Demo
 
-**[Play the game](https://lllcr6.github.io/Emu-Defense-cse-110-project/)**
+**[Play the game →](https://amberouyang.github.io/emu-war-defense/)**
 
 ## Overview
 
