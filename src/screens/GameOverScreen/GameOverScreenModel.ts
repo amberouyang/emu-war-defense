@@ -1,3 +1,5 @@
+export const LEADERBOARD_KEY = "farmDefenseLeaderboard";
+
 /**
  * Represents a single leaderboard entry
  */

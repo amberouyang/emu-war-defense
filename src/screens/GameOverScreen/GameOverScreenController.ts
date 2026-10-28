@@ -3,11 +3,11 @@ import type { ScreenSwitcher } from "../../types.ts";
 import { ScreenController } from "../../types.ts";
 import {
 	GameOverScreenModel,
+	LEADERBOARD_KEY,
 	type LeaderboardEntry,
 } from "./GameOverScreenModel.ts";
 import { GameOverScreenView } from "./GameOverScreenView.ts";
 
-const LEADERBOARD_KEY = "farmDefenseLeaderboard";
 const MAX_LEADERBOARD_ENTRIES = 10;
 
 /**
