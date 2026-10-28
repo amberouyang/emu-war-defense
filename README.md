@@ -20,7 +20,9 @@ No install needed.
 
 ![Farm planning phase on Day 1 with crops and defense tips](docs/screenshots/farm.png)
 
-![Egg raid minigame: collect eggs in a timed maze](docs/screenshots/egg-raid.png)
+![Egg raid intro: Night Raid controls and objectives](docs/screenshots/egg-raid-intro.png)
+
+![Egg raid minigame: sneak through a dark hedge maze by lantern light to collect emu eggs](docs/screenshots/egg-raid.png)
 
 ## How to play
 
@@ -34,7 +36,7 @@ No install needed.
 |---|---|
 | Place barbed wire, sandbags, or machine guns | Slow or stop emus before they reach your crops |
 | Deploy mines | Instantly take out nearby emus |
-| Play the egg raid | Collect eggs in a timed maze, then break walls with **Space** |
+| Play the egg raid | Grab eggs in a dark, timed maze, dig through hedges with **Space**, and escape for up to 3 stars |
 | Answer the daily quiz | Unlock helpful bonuses like mines |
 | Open the menu during a run | Save and exit back to the main menu |
 
