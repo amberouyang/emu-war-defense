@@ -8,7 +8,7 @@
 
 A browser strategy game inspired by the Great Emu War. Defend your wheat farm, manage resources, and survive as many days as you can.
 
-![Main menu: Farm Defense title screen with New Game and Continue](docs/screenshots/menu.png)
+![Main menu: Farm Defense title screen with New Game, Continue, best run badge, and emus running through the wheat](docs/screenshots/menu.png)
 
 ## Try it
 

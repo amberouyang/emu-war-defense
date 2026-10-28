@@ -17,7 +17,7 @@ const EMU_SIZE = 74;
 const FACT_INTERVAL_MS = 5000;
 
 const FACTS = [
-	"In 1932, thousands of emus invaded the wheat farms of Western Australia.",
+	"In 1932, thousands of emus raided Western Australia's wheat farms.",
 	"Emus can sprint at up to 50 km/h.",
 	"The army brought machine guns to the Emu War. The emus mostly won.",
 	"Emus are the second largest birds in the world, after the ostrich.",
@@ -146,9 +146,9 @@ export class MainMenuScreenView implements View {
 		this.group.add(this.createPill(STAGE_WIDTH / 2, 470, "Arrow keys to choose      Enter to play      Psst, try clicking the emus", 14));
 
 		this.factText = new Konva.Text({
-			x: STAGE_WIDTH / 2 - 270,
+			x: STAGE_WIDTH / 2 - 310,
 			y: 520,
-			width: 540,
+			width: 620,
 			text: "",
 			fontSize: 15,
 			fontFamily: FONT,
@@ -157,9 +157,9 @@ export class MainMenuScreenView implements View {
 			listening: false,
 		});
 		this.group.add(new Konva.Rect({
-			x: STAGE_WIDTH / 2 - 285,
+			x: STAGE_WIDTH / 2 - 325,
 			y: 508,
-			width: 570,
+			width: 650,
 			height: 40,
 			fill: COLORS.pill,
 			cornerRadius: 20,
