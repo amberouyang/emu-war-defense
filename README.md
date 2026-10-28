@@ -1,77 +1,73 @@
 # Emu War Defense
 
-A fast-paced browser strategy game where you defend a wheat farm from relentless emu attacks.
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![Konva](https://img.shields.io/badge/Konva-HTML5%20Canvas-0D9488)
+![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)
+![Vitest](https://img.shields.io/badge/Vitest-6E9F18?logo=vitest&logoColor=white)
+[![CI](https://github.com/amberouyang/emu-war-defense/actions/workflows/ci.yml/badge.svg)](https://github.com/amberouyang/emu-war-defense/actions/workflows/ci.yml)
 
-Inspired by the historical Great Emu War, this project blends resource management, real-time defense, and arcade mini-games into a single survival run. Built with TypeScript, Vite, and Konva.
+A browser strategy game inspired by the Great Emu War. Defend your wheat farm, manage resources, and survive as many days as you can.
 
-## Live Demo
+## Try it
 
-**[Play the game →](https://amberouyang.github.io/emu-war-defense/)**
+No install needed.
 
-## Overview
+1. Open **[amberouyang.github.io/emu-war-defense](https://amberouyang.github.io/emu-war-defense/)** in your browser.
+2. Start a new run from the main menu (or continue a saved one).
+3. Survive each day: protect your crops, place defenses, and use minigames for extra rewards.
 
-Set on a struggling wheat farm during the Great Emu War, you balance growing crops, upgrading defenses, and raiding emu territory to survive as many days as possible. Each day brings new threats, events, and choices that shape how long your farm lasts.
+## How to play
 
-## Features
+1. Grow crops and place defenses before the emus arrive.
+2. Survive the farm round — keep your crops alive until time runs out.
+3. Between days, buy upgrades, take quizzes, and choose minigames for bonuses.
+4. Try the **hunting** minigame or the **egg raid** maze for extra resources.
+5. See how many days you can last, then check the local leaderboard.
 
-- **Farm defense** — Protect every crop from an escalating emu swarm.
-- **Resource management** — Earn money, plant crops, and invest in upgradeable defenses.
-- **Mini-games** — Hunt emus and launch raids to earn rewards between waves.
-- **Daily quiz** — Answer trivia questions to unlock helpful bonuses.
-- **Leaderboard** — Track your best runs locally.
+| Do this | To do this |
+|---|---|
+| Place barbed wire, sandbags, or machine guns | Slow or stop emus before they reach your crops |
+| Deploy mines | Instantly take out nearby emus |
+| Play the egg raid | Collect eggs in a timed maze, then break walls with **Space** |
+| Answer the daily quiz | Unlock helpful bonuses like mines |
+| Open the menu mid-run | Save and exit back to the main menu |
 
-## How to Play
+## For developers
 
-1. Start a new run from the main menu.
-2. Protect the farm, expand your defenses, and survive each day.
-3. Use mini-games and daily rewards to stay ahead of the emus.
-
-## Tech Stack
-
-| Layer | Tools |
-|-------|-------|
-| Language | TypeScript |
-| Build | Vite |
-| Rendering | Konva (2D canvas) |
-| Testing | Vitest |
-
-## Architecture
-
-The game follows an MVC-style pattern with clear separation between screens, components, and shared game state:
-
-- **`src/screens/`** — Full-screen game phases (farm, hunting, raids, menus, game over)
-- **`src/components/`** — Reusable entities (emus, defenses, bullets, player)
-- **`src/controllers/`** — Shared game logic (status, quiz)
-- **`src/services/`** — Cross-cutting concerns (audio)
-- **`public/`** — Static assets (images, audio)
-
-## Getting Started
-
-**Requirements:** Node.js and npm
-
-Install dependencies:
+To run the game on your own computer:
 
 ```bash
+git clone https://github.com/amberouyang/emu-war-defense.git
+cd emu-war-defense
 npm install
-```
-
-Start the development server:
-
-```bash
 npm run dev
 ```
 
-Vite will print a local URL in the terminal. Open it in your browser to play.
-
-## Scripts
+Then open the local URL Vite prints in the terminal. To run the tests, use `npm test`. GitHub Actions runs them on every push.
 
 | Command | Description |
-|---------|-------------|
+|---|---|
 | `npm run dev` | Start the Vite dev server |
 | `npm run build` | Type-check and build for production |
 | `npm run preview` | Preview the production build locally |
-| `npm run test` | Run the test suite |
+| `npm run test` | Run the Vitest suite |
 | `npm run test:ui` | Open the interactive Vitest UI |
+
+**Built with:** TypeScript, Vite, and Konva (HTML5 Canvas). Tests use Vitest.
+
+**How it works:** The game uses an MVC-style layout. Screens and entities each have a model, view, and controller. Shared progress (inventory, day, score) lives in a central status controller and is saved in `localStorage`. Farm and hunting screens run on `requestAnimationFrame` game loops; the egg raid is a timed tile-based maze with procedural layout generation.
+
+**Project layout:**
+
+- `src/screens/` — farm, hunting, egg raid, menus, morning events, game over
+- `src/components/` — emus, defenses, bullets, player, crops
+- `src/controllers/` — shared game status and quiz logic
+- `src/services/` — audio
+- `public/` — images and sound
+
+## Author
+
+Originally built as a team project for CSE 110. This portfolio fork is maintained by Amber Ouyang ([@amberouyang](https://github.com/amberouyang)).
 
 ## License
 
