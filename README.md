@@ -8,6 +8,8 @@
 
 A browser strategy game inspired by the Great Emu War. Defend your wheat farm, manage resources, and survive as many days as you can.
 
+![Main menu: Farm Defense title screen with New Game and Continue](docs/screenshots/menu.png)
+
 ## Try it
 
 No install needed.
@@ -16,10 +18,14 @@ No install needed.
 2. Start a new run from the main menu (or continue a saved one).
 3. Survive each day: protect your crops, place defenses, and use minigames for extra rewards.
 
+![Farm planning phase on Day 1 with crops and defense tips](docs/screenshots/farm.png)
+
+![Egg raid minigame: collect eggs in a timed maze](docs/screenshots/egg-raid.png)
+
 ## How to play
 
 1. Grow crops and place defenses before the emus arrive.
-2. Survive the farm round — keep your crops alive until time runs out.
+2. Survive the farm round. Keep your crops alive until time runs out.
 3. Between days, buy upgrades, take quizzes, and choose minigames for bonuses.
 4. Try the **hunting** minigame or the **egg raid** maze for extra resources.
 5. See how many days you can last, then check the local leaderboard.
@@ -30,9 +36,9 @@ No install needed.
 | Deploy mines | Instantly take out nearby emus |
 | Play the egg raid | Collect eggs in a timed maze, then break walls with **Space** |
 | Answer the daily quiz | Unlock helpful bonuses like mines |
-| Open the menu mid-run | Save and exit back to the main menu |
+| Open the menu during a run | Save and exit back to the main menu |
 
-## For developers
+## For Developers
 
 To run the game on your own computer:
 
@@ -48,22 +54,22 @@ Then open the local URL Vite prints in the terminal. To run the tests, use `npm 
 | Command | Description |
 |---|---|
 | `npm run dev` | Start the Vite dev server |
-| `npm run build` | Type-check and build for production |
+| `npm run build` | Type check and build for production |
 | `npm run preview` | Preview the production build locally |
 | `npm run test` | Run the Vitest suite |
 | `npm run test:ui` | Open the interactive Vitest UI |
 
 **Built with:** TypeScript, Vite, and Konva (HTML5 Canvas). Tests use Vitest.
 
-**How it works:** The game uses an MVC-style layout. Screens and entities each have a model, view, and controller. Shared progress (inventory, day, score) lives in a central status controller and is saved in `localStorage`. Farm and hunting screens run on `requestAnimationFrame` game loops; the egg raid is a timed tile-based maze with procedural layout generation.
+**How it works:** The game uses an MVC style layout. Screens and entities each have a model, view, and controller. Shared progress (inventory, day, score) lives in a central status controller and is saved in `localStorage`. Farm and hunting screens run on `requestAnimationFrame` game loops. The egg raid is a timed tile based maze with procedural layout generation.
 
 **Project layout:**
 
-- `src/screens/` — farm, hunting, egg raid, menus, morning events, game over
-- `src/components/` — emus, defenses, bullets, player, crops
-- `src/controllers/` — shared game status and quiz logic
-- `src/services/` — audio
-- `public/` — images and sound
+- `src/screens/`: farm, hunting, egg raid, menus, morning events, game over
+- `src/components/`: emus, defenses, bullets, player, crops
+- `src/controllers/`: shared game status and quiz logic
+- `src/services/`: audio
+- `public/`: images and sound
 
 ## Author
 
