@@ -1,28 +1,30 @@
 import { GameIntroModel } from "./GameIntroScreenModel";
 import { GameIntroView } from "./GameIntroScreenView";
-import type { ScreenSwitcher } from "../../types"; // 1. Import ScreenSwitcher
+import type { ScreenSwitcher } from "../../types";
 
 export class GameIntroController {
   private model: GameIntroModel;
   private view: GameIntroView;
-  private screenSwitcher: ScreenSwitcher; // New property
+  private screenSwitcher: ScreenSwitcher;
   private currentPage: number = 0;
   private keydownHandler: ((e: KeyboardEvent) => void) | null = null;
 
-  // 2. Updated constructor signature
   constructor(screenSwitcher: ScreenSwitcher) {
     this.model = new GameIntroModel();
-    this.view = new GameIntroView(); // View no longer needs stage passed in
+    this.view = new GameIntroView(
+      () => this.nextPage(),
+      () => this.previousPage(),
+      () => this.completeIntro(),
+    );
     this.screenSwitcher = screenSwitcher;
 
-    // Do not render or setup input immediately in constructor, 
+    // Do not render or setup input immediately in constructor,
     // wait for show() to be called.
     this.view.hide();
   }
 
-  // 3. Implement show() and hide()
   show(): void {
-    this.currentPage = 0; // Reset to first page
+    this.currentPage = 0;
     this.renderCurrentPage();
     this.setupInput();
     this.view.show();
@@ -49,29 +51,44 @@ export class GameIntroController {
     this.view.renderPage(text, isLastPage, this.currentPage, totalPages);
   }
 
+  private nextPage(): void {
+    if (this.currentPage < this.model.getPageCount() - 1) {
+      this.currentPage++;
+      this.renderCurrentPage();
+    } else {
+      this.completeIntro();
+    }
+  }
+
+  private previousPage(): void {
+    if (this.currentPage === 0) return;
+    this.currentPage--;
+    this.renderCurrentPage();
+  }
+
   private setupInput(): void {
     if (this.keydownHandler) {
       window.removeEventListener("keydown", this.keydownHandler);
     }
 
     this.keydownHandler = (e: KeyboardEvent) => {
-      if (e.code === "Escape") {
-        e.preventDefault();
-        this.completeIntro(); // Skip directly to the end
-        return;
-      }
-
-      if (e.code === "Space") {
-        e.preventDefault(); // Prevent page scrolling
-
-        if (this.currentPage < this.model.getPageCount() - 1) {
-          // Move to next page
-          this.currentPage++;
-          this.renderCurrentPage();
-        } else {
-          // Last page - complete intro
+      if (e.repeat) return;
+      switch (e.code) {
+        case "Escape":
+          e.preventDefault();
           this.completeIntro();
-        }
+          break;
+        case "Space":
+        case "Enter":
+        case "ArrowRight":
+          e.preventDefault(); // Prevent page scrolling
+          this.nextPage();
+          break;
+        case "ArrowLeft":
+        case "Backspace":
+          e.preventDefault();
+          this.previousPage();
+          break;
       }
     };
 
@@ -79,16 +96,14 @@ export class GameIntroController {
   }
 
   private completeIntro(): void {
-    // Use screenSwitcher to move to the next screen
-    this.screenSwitcher.switchToScreen({ type: "farm", newgame:true });
+    this.screenSwitcher.switchToScreen({ type: "farm", newgame: true });
   }
-
 
   destroy(): void {
     if (this.keydownHandler) {
       window.removeEventListener("keydown", this.keydownHandler);
       this.keydownHandler = null;
     }
-    this.view.destroy(); // Now just cleans up view internal resources
+    this.view.destroy();
   }
 }
