@@ -1,5 +1,7 @@
 import Konva from "konva";
 import { STAGE_WIDTH, STAGE_HEIGHT, HUD_HEIGHT } from "../../constants";
+import { INK, createModal, makeButton, makeRibbon } from "../../utils/uiKit.ts";
+import pauseSrc from "../../../assets/pause.png";
 const WOOD_STOPS = [0, "#80502a", 1, "#55331a"];
 const CREAM = "#fff3d6";
 
@@ -111,6 +113,10 @@ export class HuntingScreenView {
 	private emusValueText: Konva.Text;
 	private timerText: Konva.Text;
 	private timerBarFill: Konva.Rect;
+	private pauseOverlay: Konva.Group;
+	private onPause: (() => void) | null = null;
+	private onResume: (() => void) | null = null;
+	private onLeave: (() => void) | null = null;
 
 	constructor() {
 		this.group = new Konva.Group({ visible: false });
@@ -153,7 +159,9 @@ export class HuntingScreenView {
 		const emuChip = this.createChip(STAGE_WIDTH / 2 - 70, "EMUS LEFT");
 		this.emusValueText = emuChip.findOne(".value") as Konva.Text;
 
-		const timer = new Konva.Group({ x: STAGE_WIDTH - 210, y: 14, listening: false });
+		this.addPauseButton();
+
+		const timer = new Konva.Group({ x: STAGE_WIDTH - 258, y: 14, listening: false });
 		timer.add(new Konva.Rect({ width: 194, height: 36, cornerRadius: 18, fill: "rgba(30, 18, 8, 0.6)", stroke: "#c9a66b", strokeWidth: 1.5 }));
 		timer.add(new Konva.Circle({ x: 18, y: 18, radius: 11, fill: CREAM, stroke: "#4a2c0a", strokeWidth: 2 }));
 		timer.add(new Konva.Line({ points: [18, 10, 18, 18, 24, 21], stroke: "#4a2c0a", strokeWidth: 2, lineCap: "round", lineJoin: "round" }));
@@ -178,7 +186,7 @@ export class HuntingScreenView {
 			x: 16,
 			y: 56,
 			width: 520,
-			text: "WASD or arrows to move.  SPACE to shoot.  3 hits take down an emu.",
+			text: "WASD or arrows to move.  SPACE to shoot.  Esc to pause.",
 			fontSize: 12,
 			fontFamily: "Arial",
 			fontStyle: "bold",
@@ -188,6 +196,69 @@ export class HuntingScreenView {
 			shadowOpacity: 0.6,
 			listening: false,
 		}));
+
+		this.pauseOverlay = this.createPauseOverlay();
+		this.group.add(this.pauseOverlay);
+	}
+
+	private addPauseButton(): void {
+		const pauseImage = typeof Image !== "undefined" ? Object.assign(new Image(), { src: pauseSrc }) : (document.createElement("img") as HTMLImageElement);
+		const group = new Konva.Group({ x: STAGE_WIDTH - 52, y: 14, cursor: "pointer" });
+		group.add(new Konva.Rect({ y: 4, width: 40, height: 40, cornerRadius: 9, fill: "#4b5560" }));
+		group.add(new Konva.Rect({
+			width: 40,
+			height: 40,
+			cornerRadius: 9,
+			fill: "#7d8a96",
+			stroke: "rgba(255, 255, 255, 0.35)",
+			strokeWidth: 1.5,
+		}));
+		group.add(new Konva.Image({ x: 5, y: 5, width: 30, height: 30, image: pauseImage, listening: false }));
+		group.on("click tap", () => this.onPause?.());
+		this.group.add(group);
+	}
+
+	private createPauseOverlay(): Konva.Group {
+		const { popup, y } = createModal(400, 270);
+		popup.visible(false);
+		popup.add(makeRibbon(STAGE_WIDTH / 2, y - 24, 220, "PAUSED"));
+		popup.add(new Konva.Text({
+			x: STAGE_WIDTH / 2 - 180,
+			y: y + 40,
+			width: 360,
+			text: "The emus will wait. Probably.",
+			fontSize: 16,
+			fontFamily: "Georgia",
+			fontStyle: "italic",
+			fill: INK,
+			align: "center",
+		}));
+		popup.add(makeButton(
+			{ x: STAGE_WIDTH / 2 - 140, y: y + 84, width: 280, height: 54, text: "RESUME", color: "#2fa84f", lip: "#1b6b31", fontSize: 22 },
+			() => this.onResume?.()
+		));
+		popup.add(makeButton(
+			{ x: STAGE_WIDTH / 2 - 140, y: y + 160, width: 280, height: 54, text: "LEAVE HUNT", color: "#e0453a", lip: "#8f231b", fontSize: 22 },
+			() => this.onLeave?.()
+		));
+		return popup;
+	}
+
+	setPauseHandlers(onPause: () => void, onResume: () => void, onLeave: () => void): void {
+		this.onPause = onPause;
+		this.onResume = onResume;
+		this.onLeave = onLeave;
+	}
+
+	showPauseOverlay(): void {
+		this.pauseOverlay.visible(true);
+		this.pauseOverlay.moveToTop();
+		this.group.getLayer()?.draw();
+	}
+
+	hidePauseOverlay(): void {
+		this.pauseOverlay.visible(false);
+		this.group.getLayer()?.draw();
 	}
 
 	private createChip(x: number, label: string): Konva.Group {
@@ -210,6 +281,7 @@ export class HuntingScreenView {
 
 	hide() {
 		this.group.visible(false);
+		this.pauseOverlay.visible(false);
 		this.group.getLayer()?.draw();
 	}
 
