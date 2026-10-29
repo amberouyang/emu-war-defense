@@ -25,21 +25,25 @@ export class PlayerController {
     const wasMoving = this.model.isMoving; 
     this.model.isMoving = false;
 
-    // Process movement keys
-    if (keys.has("w")) {
+    // Process movement keys (WASD and arrows)
+    const up = keys.has("w") || keys.has("W") || keys.has("ArrowUp");
+    const down = keys.has("s") || keys.has("S") || keys.has("ArrowDown");
+    const left = keys.has("a") || keys.has("A") || keys.has("ArrowLeft");
+    const right = keys.has("d") || keys.has("D") || keys.has("ArrowRight");
+    if (up) {
       dy -= speed;
       this.model.direction = "up";
       this.model.isMoving = true;
-    } else if (keys.has("s")) {
+    } else if (down) {
       dy += speed;
       this.model.direction = "down";
       this.model.isMoving = true;
     }
-    if (keys.has("a")) {
+    if (left) {
       dx -= speed;
       this.model.direction = "left";
       this.model.isMoving = true;
-    } else if (keys.has("d")) {
+    } else if (right) {
       dx += speed;
       this.model.direction = "right";
       this.model.isMoving = true;

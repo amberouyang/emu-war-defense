@@ -114,6 +114,9 @@ export class HuntingScreenController extends ScreenController {
 
   private onKeyDown(e: KeyboardEvent) {
     // capture arrow keys and space
+    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " ", "Space"].includes(e.key) || e.code === "Space") {
+      e.preventDefault();
+    }
     this.keys.add(e.key);
     // handle space fire on keydown so repeated fires possible with key repeat
     if (e.code === "Space" && this.model.canShoot()) {
