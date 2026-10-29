@@ -87,6 +87,7 @@ export class PlanningPhaseView implements View {
 	private animation: Konva.Animation | null = null;
 	private elapsed = 0;
 	private day = 1;
+	private inPlacement = false;
 
 	constructor() {
 		this.group = new Konva.Group({ visible: false, listening: true });
@@ -206,7 +207,7 @@ export class PlanningPhaseView implements View {
 		const steps = [
 			"Pick a defense from your arsenal below, or press 1, 2, or 3.",
 			"Aim at the farm, then press T or click to place it.",
-			"Hit Place Defenses, then the start button (top right) to begin.",
+			"Press Place Defenses. When you're ready, hit the green START button.",
 		];
 		steps.forEach((step, i) => {
 			const rowY = y + 102 + i * 36;
@@ -569,7 +570,9 @@ export class PlanningPhaseView implements View {
 		const selected = DEFENSES.find((d) => d.type === this.selectedDefenseType);
 		const text = selected
 			? `${selected.name} ready. Aim at the farm and press T or click to place.  Esc to cancel.`
-			: "Select a defense to arm it.";
+			: this.inPlacement
+				? "Place your defenses, then press the green START button."
+				: "Select a defense to arm it.";
 		this.selectionPanelHint.text(text);
 		const width = this.selectionPanelHint.width();
 		this.selectionPanelHint.x(STAGE_WIDTH / 2 - width / 2);
@@ -579,6 +582,7 @@ export class PlanningPhaseView implements View {
 
 	setPlacementMode(enabled: boolean): void {
 		// In placement mode, keep only the compact defense tray visible so the farm stays bright.
+		this.inPlacement = enabled;
 		this.overlay.visible(!enabled);
 		this.tutorialPanel.visible(!enabled);
 		this.startButton.visible(!enabled);
