@@ -51,6 +51,16 @@ export class HuntingScreenModel {
     this.timeRemaining = Math.max(0, 60 - elapsed);
     return this.timeRemaining;
   }
+
+  pauseTimer(): void {
+    this.updateTimer();
+    this.startTime = 0;
+  }
+
+  resumeTimer(): void {
+    const elapsed = Math.max(0, 60 - this.timeRemaining);
+    this.startTime = Date.now() - elapsed * 1000;
+  }
   
   stopTimer(): void {
     this.startTime = 0;

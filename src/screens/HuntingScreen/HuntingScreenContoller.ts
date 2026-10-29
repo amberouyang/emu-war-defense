@@ -17,6 +17,7 @@ export class HuntingScreenController extends ScreenController {
   private view: HuntingScreenView;
   private screenSwitcher: ScreenSwitcher;
   private running = false;
+  private paused = false;
   private audioManager : AudioManager;
   private status: GameStatusController ;
 
@@ -33,6 +34,11 @@ export class HuntingScreenController extends ScreenController {
     this.screenSwitcher = screenSwitcher;
     this.model = new HuntingScreenModel();
     this.view = new HuntingScreenView();
+    this.view.setPauseHandlers(
+      () => this.pauseHunt(),
+      () => this.resumeHunt(),
+      () => this.leaveHunt(),
+    );
     this.audioManager = audioManager;
     this.status = status;
   }
@@ -47,8 +53,10 @@ export class HuntingScreenController extends ScreenController {
     this.view.updateAmmo(this.model.getAmmo());
     this.view.updateDefeat(this.emuControllers.length);
     this.view.updateTimer(this.model.getTimeRemaining());
+    this.view.hidePauseOverlay();
     this.view.show();
     this.running = true;
+    this.paused = false;
 
     // attach keyboard
     this.onKeyDown = this.onKeyDown.bind(this);
@@ -114,6 +122,20 @@ export class HuntingScreenController extends ScreenController {
 
   private onKeyDown(e: KeyboardEvent) {
     // capture arrow keys and space
+    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " ", "Space", "Escape"].includes(e.key) || e.code === "Space") {
+      e.preventDefault();
+    }
+    if (e.key === "Escape") {
+      if (this.paused) {
+        this.resumeHunt();
+      } else {
+        this.pauseHunt();
+      }
+      return;
+    }
+    if (this.paused) {
+      return;
+    }
     this.keys.add(e.key);
     // handle space fire on keydown so repeated fires possible with key repeat
     if (e.code === "Space" && this.model.canShoot()) {
@@ -131,8 +153,42 @@ export class HuntingScreenController extends ScreenController {
     this.keys.delete(e.key);
   }
 
+  private pauseHunt(): void {
+    if (!this.running || this.paused) {
+      return;
+    }
+    this.paused = true;
+    this.keys.clear();
+    this.model.pauseTimer();
+    this.playerController?.stopAllSounds();
+    this.view.showPauseOverlay();
+  }
+
+  private resumeHunt(): void {
+    if (!this.paused || !this.running) {
+      return;
+    }
+    this.paused = false;
+    this.model.resumeTimer();
+    this.view.hidePauseOverlay();
+    this.gameLoop();
+  }
+
+  private leaveHunt(): void {
+    this.paused = false;
+    this.running = false;
+    this.keys.clear();
+    this.model.stopTimer();
+    this.playerController?.stopAllSounds();
+    window.removeEventListener("keydown", this.onKeyDown);
+    window.removeEventListener("keyup", this.onKeyUp);
+    this.status.incrementScore(this.model.getDefeat() * 1);
+    this.view.hidePauseOverlay();
+    this.screenSwitcher.switchToScreen({ type: "farm", newgame: false });
+  }
+
   private gameLoop = () => {
-    if (!this.running) return;
+    if (!this.running || this.paused) return;
 
     // update timer
     this.model.updateTimer();
@@ -194,6 +250,7 @@ export class HuntingScreenController extends ScreenController {
 
   endGame(reason: "ammo" | "time" | "victory" = "victory") {
     this.running = false;
+    this.paused = false;
     this.keys.clear();
     this.model.stopTimer();
     if (this.playerController) {

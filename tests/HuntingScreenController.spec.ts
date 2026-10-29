@@ -29,6 +29,9 @@ const mockView = {
   show: vi.fn(),
   hide: vi.fn(),
   batchDraw: vi.fn(),
+  setPauseHandlers: vi.fn(),
+  showPauseOverlay: vi.fn(),
+  hidePauseOverlay: vi.fn(),
 };
 
 // Mock Model

@@ -2,7 +2,7 @@ export class EmuModel {
   x: number;
   y: number;
   currentDirection: "up" | "down" | "left" | "right" = "right";
-  speed = 3;
+  speed = 0.8;
   hitCount = 0;
   maxHits = 3;
   active = true;
