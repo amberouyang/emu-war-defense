@@ -1,5 +1,9 @@
 import Konva from "konva";
 import emuSrc from "../../../assets/Emu.png";
+import { HUD_HEIGHT } from "../../constants.ts";
+
+/** Topmost y an emu can reach, keeping its HP label below the HUD bar. */
+export const EMU_MIN_Y = HUD_HEIGHT + 36;
 
 const createImage = (src: string): HTMLImageElement => {
 	if (typeof Image !== "undefined") {
@@ -25,6 +29,7 @@ export class FarmEmuView {
 
 	constructor(group: Konva.Group, startX: number, startY: number, onClick: () => void) {
 		this.parentGroup = group;
+		startY = Math.max(EMU_MIN_Y, startY);
 		const sprite = createImage(emuSrc);
 		this.emu = new Konva.Image({
 			x: startX,
@@ -87,7 +92,7 @@ export class FarmEmuView {
 	moveDelta(dx: number, dy: number): void {
 		if (!this.emu) return;
 		this.emu.x(this.emu.x() + dx);
-		this.emu.y(this.emu.y() + dy);
+		this.emu.y(Math.max(EMU_MIN_Y, this.emu.y() + dy));
 		this.syncHealthUi();
 	}
 
