@@ -50,7 +50,7 @@ export class FarmScreenController extends ScreenController {
 	private isDefensePlacementMode: boolean = false;
 	private isGameOver: boolean = false;
 	private selectedDefenseType: DefenseType | null = null;
-	private readonly planningHint = "Select a defense, then press T to place it at the cursor.";
+	private readonly planningHint = "Place defenses, then press the green START button (top right).";
 
 	private activeMines: ActiveMine[] = [];
 	private gunCooldowns = new Map<DefenseController, number>();
@@ -195,8 +195,9 @@ export class FarmScreenController extends ScreenController {
 		this.resetMines();
 		this.updateCropDisplay();
 		
-		// Now show planning phase
-		this.showPlanningPhase();
+		// Day 1 starts with no defenses so the first raid teaches the farm loop.
+		this.hidePlanningUi();
+		this.startRound();
 	}
 
 	private showPlanningPhase(): void {
