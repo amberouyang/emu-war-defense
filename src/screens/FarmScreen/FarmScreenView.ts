@@ -3,6 +3,7 @@ import type { View } from "../../types.ts";
 import {STAGE_WIDTH, STAGE_HEIGHT, PLANTER_WIDTH, PLANTER_HEIGHT, HUD_HEIGHT, GAME_DURATION} from "../../constants.ts";
 import {FarmPlanterController} from "../../components/FarmPlanterComponent/FarmPlanterController.ts";
 import {FarmEmuController} from "../../components/FarmEmuComponent/FarmEmuController.ts";
+import {EMU_MIN_Y} from "../../components/FarmEmuComponent/FarmEmuView.ts";
 import mineSrc from "../../../assets/mine.png";
 import flagSrc from "../../../assets/flag.png";
 import chevronSrc from "../../../assets/chevron.png";
@@ -922,9 +923,9 @@ export class FarmScreenView implements View {
 			const side = Math.floor(Math.random() * 4);
 			let location = [0, 0];
 			switch (side) {
-			case 0: location = [0, Math.random() * STAGE_HEIGHT]; break;
-			case 1: location = [Math.random() * STAGE_WIDTH, 0]; break;
-			case 2: location = [STAGE_WIDTH, Math.random() * STAGE_HEIGHT]; break;
+			case 0: location = [0, EMU_MIN_Y + Math.random() * (STAGE_HEIGHT - EMU_MIN_Y)]; break;
+			case 1: location = [Math.random() * STAGE_WIDTH, EMU_MIN_Y]; break;
+			case 2: location = [STAGE_WIDTH, EMU_MIN_Y + Math.random() * (STAGE_HEIGHT - EMU_MIN_Y)]; break;
 			case 3: location = [Math.random() * STAGE_WIDTH, STAGE_HEIGHT]; break;
 			}
 
