@@ -79,6 +79,8 @@ class App implements ScreenSwitcher {
 		const devScreen = new URLSearchParams(window.location.search).get("screen");
 		if (devScreen === "raid") {
 			this.switchToScreen({ type: "minigame1_raid" });
+		} else if (devScreen === "intro") {
+			this.switchToScreen({ type: "game_intro" });
 		}
 	}
 
