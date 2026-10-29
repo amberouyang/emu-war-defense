@@ -18,11 +18,17 @@ No install needed.
 2. Start a new run from the main menu (or continue a saved one).
 3. Survive each day: protect your crops, place defenses, and use minigames for extra rewards.
 
-![Farm planning phase on Day 1 with crops and defense tips](docs/screenshots/farm.png)
+![Farm planning: Day 1 war room with field intel, numbered steps, and the defense arsenal](docs/screenshots/farm.png)
+
+![Farm field: grassy crop plot with wooden HUD, dirt path, and a sandbag ready to place](docs/screenshots/farm-field.png)
+
+![Morning market stall with the gazette, wallet chips, and shop buttons](docs/screenshots/market.png)
 
 ![Egg raid intro: Night Raid controls and objectives](docs/screenshots/egg-raid-intro.png)
 
 ![Egg raid minigame: sneak through a dark hedge maze by lantern light to collect emu eggs](docs/screenshots/egg-raid.png)
+
+![Game over: Hall of Fame leaderboard with medals and your highlighted run](docs/screenshots/game-over.png)
 
 ## How to play
 
