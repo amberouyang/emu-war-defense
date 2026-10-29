@@ -8,6 +8,8 @@ import mineSrc from "../../../assets/mine.png";
 import flagSrc from "../../../assets/flag.png";
 import chevronSrc from "../../../assets/chevron.png";
 import pauseSrc from "../../../assets/pause.png";
+import emuSrc from "../../../assets/Emu.png";
+import { INK, createModal, makeButton, makeRibbon } from "../../utils/uiKit.ts";
 
 const createImage = (src: string): HTMLImageElement => {
 	if (typeof Image !== "undefined") {
@@ -25,6 +27,7 @@ const mineImage = createImage(mineSrc);
 const flagImage = createImage(flagSrc);
 const chevronImage = createImage(chevronSrc);
 const pauseImage = createImage(pauseSrc);
+const emuImage = createImage(emuSrc);
 const MINE_SIZE = 42;
 
 const PLANTER_POSITIONS: { x: number; y: number }[] = [];
@@ -553,121 +556,21 @@ export class FarmScreenView implements View {
 
 		this.group.add(this.hudGroup);
 
-		this.menuOverlay = new Konva.Group({ visible: false });
+		this.menuOverlay = this.createPauseMenu();
 
-		const overlayBackground = new Konva.Rect({
-			x: 0,
-			y: 0,
-			width: STAGE_WIDTH,
-			height: STAGE_HEIGHT,
-			fill: "rgba(0, 0, 0, 0.55)",
-		});
-		overlayBackground.on("mouseup", (evt) => {
-			evt.cancelBubble = true;
-		});
-
-		const panelWidth = 420;
-		const panelHeight = 260;
-		const panelX = (STAGE_WIDTH - panelWidth) / 2;
-		const panelY = (STAGE_HEIGHT - panelHeight) / 2;
-
-		const overlayPanel = new Konva.Rect({
-			x: panelX,
-			y: panelY,
-			width: panelWidth,
-			height: panelHeight,
-			fill: "#f5f5f5",
-			stroke: "#333333",
-			strokeWidth: 2,
-			cornerRadius: 12,
-		});
-
-		const overlayTitle = new Konva.Text({
-			x: panelX,
-			y: panelY + 24,
-			width: panelWidth,
-			text: "Pause Menu",
-			fontSize: 32,
-			fontFamily: "Arial",
-			fill: "#333333",
-			align: "center",
-		});
-
-		const saveButton = new Konva.Group({
-			x: panelX + 40,
-			y: panelY + 100,
-			cursor: "pointer",
-		});
-
-		const saveRect = new Konva.Rect({
-			width: panelWidth - 80,
-			height: 56,
-			fill: "#2e7d32",
-			cornerRadius: 10,
-		});
-
-		const saveText = new Konva.Text({
-			text: "Save and Exit",
-			fontSize: 24,
-			fontFamily: "Arial",
-			fill: "white",
-			width: panelWidth - 80,
-			y: 14,
-			align: "center",
-		});
-
-		saveButton.add(saveRect);
-		saveButton.add(saveText);
-		saveButton.on("mouseup", () => {
-			this.menuSaveHandler?.();
-		});
-
-		const backButton = new Konva.Group({
-			x: panelX + 40,
-			y: panelY + 170,
-			cursor: "pointer",
-		});
-
-		const backRect = new Konva.Rect({
-			width: panelWidth - 80,
-			height: 56,
-			fill: "#c62828",
-			cornerRadius: 10,
-		});
-
-		const backText = new Konva.Text({
-			text: "Back to Game",
-			fontSize: 24,
-			fontFamily: "Arial",
-			fill: "white",
-			width: panelWidth - 80,
-			y: 14,
-			align: "center",
-		});
-
-		backButton.add(backRect);
-		backButton.add(backText);
-		backButton.on("mouseup", () => {
-			this.menuBackHandler?.();
-		});
-
-		this.menuOverlay.add(overlayBackground);
-		this.menuOverlay.add(overlayPanel);
-		this.menuOverlay.add(overlayTitle);
-		this.menuOverlay.add(saveButton);
-		this.menuOverlay.add(backButton);
-
-		//Hunting Menu overlay:
-		this.huntMenuOverlay = this.createOverlay(
-			"You Have An Opportunity to Hunt!!!",
+		this.huntMenuOverlay = this.createMinigameOverlay(
+			"EMU HUNT",
+			"A mob of emus is out in the open. Head into the bush and hunt them down for points.",
+			"hunt",
 			() => this.huntContinueHandler?.(),
 			() => this.huntSkipHandler?.()
 		);
 		this.group.add(this.huntMenuOverlay);
 
-		//Egg Menu overlay:
-		this.eggMenuOverlay = this.createOverlay(
-			"You Have An Opportunity to Collect!!!",
+		this.eggMenuOverlay = this.createMinigameOverlay(
+			"NIGHT EGG RAID",
+			"The emus left their nests unguarded. Sneak through the maze and grab eggs to sell at the market.",
+			"egg",
 			() => this.eggContinueHandler?.(),
 			() => this.eggSkipHandler?.()
 		);
@@ -804,116 +707,89 @@ export class FarmScreenView implements View {
 		this.ambientAnim.start();
 	}
 
-	//For adding overlays to access minigames:
-	private createOverlay(msg: string, 
-		continueHandler: (() => void) | null, 
-		skipHandler: (() => void) | null) {
+	private createPauseMenu(): Konva.Group {
+		const { popup, y } = createModal(400, 270);
+		popup.visible(false);
+		popup.add(makeRibbon(STAGE_WIDTH / 2, y - 24, 220, "PAUSED"));
+		popup.add(new Konva.Text({
+			x: STAGE_WIDTH / 2 - 180,
+			y: y + 40,
+			width: 360,
+			text: "The emus will wait. Probably.",
+			fontSize: 16,
+			fontFamily: "Georgia",
+			fontStyle: "italic",
+			fill: INK,
+			align: "center",
+		}));
+		popup.add(makeButton(
+			{ x: STAGE_WIDTH / 2 - 140, y: y + 84, width: 280, height: 54, text: "RESUME", color: "#2fa84f", lip: "#1b6b31", fontSize: 22 },
+			() => this.menuBackHandler?.()
+		));
+		popup.add(makeButton(
+			{ x: STAGE_WIDTH / 2 - 140, y: y + 160, width: 280, height: 54, text: "SAVE AND EXIT", color: "#f0a020", lip: "#a0620a", fontSize: 22 },
+			() => this.menuSaveHandler?.()
+		));
+		return popup;
+	}
 
-		const overlay = new Konva.Group({ visible: false });
-		const panelWidth = 336;
-		const panelHeight = 208;
-		const panelX = (STAGE_WIDTH - panelWidth) / 2;
-		const panelY = (STAGE_HEIGHT - panelHeight) / 2;
+	private createMinigameOverlay(
+		title: string,
+		description: string,
+		icon: "hunt" | "egg",
+		continueHandler: () => void,
+		skipHandler: () => void,
+	): Konva.Group {
+		const { popup, y } = createModal(440, 330);
+		popup.visible(false);
+		popup.add(makeRibbon(STAGE_WIDTH / 2, y - 24, 260, "BONUS MISSION"));
 
-		const overlayBackground = new Konva.Rect({
-			x: 0,
-			y: 0,
-			width: STAGE_WIDTH,
-			height: STAGE_HEIGHT,
-			fill: "rgba(0, 0, 0, 0.55)",
-		});
-		overlayBackground.on("mouseup", (evt) => {
-			evt.cancelBubble = true;
-		});
+		const cx = STAGE_WIDTH / 2;
+		popup.add(new Konva.Circle({ x: cx, y: y + 72, radius: 38, fill: "#efe2c2", stroke: "#c9a66b", strokeWidth: 3 }));
+		if (icon === "hunt") {
+			popup.add(new Konva.Image({ x: cx - 28, y: y + 44, width: 56, height: 56, image: emuImage, listening: false }));
+		} else {
+			for (const [dx, dy, r] of [[-14, 8, 1], [14, 8, 1], [0, -4, 1.15]]) {
+				const egg = new Konva.Group({ x: cx + dx, y: y + 72 + dy, scaleX: r, scaleY: r, listening: false });
+				egg.add(new Konva.Ellipse({ radiusX: 11, radiusY: 14, fill: "#fbf3e0", stroke: "#b89a6a", strokeWidth: 1.5 }));
+				egg.add(new Konva.Ellipse({ x: -3, y: -5, radiusX: 3, radiusY: 5, fill: "rgba(255, 255, 255, 0.8)" }));
+				egg.add(new Konva.Circle({ x: 4, y: 3, radius: 1.5, fill: "#9c8a6a" }));
+				popup.add(egg);
+			}
+		}
 
-
-		const overlayPanel = new Konva.Rect({
-			x: panelX,
-			y: panelY,
-			width: panelWidth,
-			height: panelHeight,
-			fill: "#f5f5f5",
-			stroke: "#333333",
-			strokeWidth: 2,
-			cornerRadius: 12,
-		});
-
-		const overlayTitle = new Konva.Text({
-			x: panelX,
-			y: panelY + 19,
-			width: panelWidth,
-			text: msg,
+		popup.add(new Konva.Text({
+			x: cx - 200,
+			y: y + 122,
+			width: 400,
+			text: title,
 			fontSize: 26,
 			fontFamily: "Arial",
-			fill: "#333333",
+			fontStyle: "bold",
+			letterSpacing: 1,
+			fill: INK,
 			align: "center",
-		});
-
-		const skipButton = new Konva.Group({
-			x: panelX + 32,
-			y: panelY + 80,
-			cursor: "pointer",
-		});
-
-		const skipRect = new Konva.Rect({
-			width: panelWidth - 64,
-			height: 45,
-			fill: "#2e7d32",
-			cornerRadius: 10,
-		});
-
-		const skipText = new Konva.Text({
-			text: "Skip",
-			fontSize: 20,
-			fontFamily: "Arial",
-			fill: "white",
-			width: panelWidth - 64,
-			y: 14,
+		}));
+		popup.add(new Konva.Text({
+			x: cx - 190,
+			y: y + 158,
+			width: 380,
+			text: description,
+			fontSize: 15,
+			fontFamily: "Georgia",
+			fill: "#6d4c41",
 			align: "center",
-		});
-
-		skipButton.add(skipRect);
-		skipButton.add(skipText);
-		skipButton.on("mouseup", () => {
-			skipHandler?.();
-		});
-
-		const continueButton = new Konva.Group({
-			x: panelX + 32,
-			y: panelY + 136,
-			cursor: "pointer",
-		});
-
-		const continueRect = new Konva.Rect({
-			width: panelWidth - 64,
-			height: 45,
-			fill: "#c62828",
-			cornerRadius: 10,
-		});
-
-		const continueText = new Konva.Text({
-			text: "Continue",
-			fontSize: 20,
-			fontFamily: "Arial",
-			fill: "white",
-			width: panelWidth - 64,
-			y: 14,
-			align: "center",
-		});
-
-		continueButton.add(continueRect);
-		continueButton.add(continueText);
-		continueButton.on("mouseup", () => {
-			continueHandler?.();
-		});
-
-		overlay.add(overlayBackground);
-		overlay.add(overlayPanel);
-		overlay.add(overlayTitle);
-		overlay.add(skipButton);
-		overlay.add(continueButton);
-
-		return overlay
+			lineHeight: 1.3,
+		}));
+		popup.add(makeButton(
+			{ x: cx - 190, y: y + 254, width: 180, height: 52, text: "SKIP", color: "#7d8a96", lip: "#4b5560", fontSize: 20 },
+			skipHandler
+		));
+		popup.add(makeButton(
+			{ x: cx + 10, y: y + 254, width: 180, height: 52, text: "PLAY", color: "#2fa84f", lip: "#1b6b31", fontSize: 22 },
+			continueHandler
+		));
+		return popup;
 	}
 
 	spawnEmus(n: number): void {
