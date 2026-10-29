@@ -32,8 +32,8 @@ export class PlanningPhaseController {
 		return this.view.getSelectedDefenseType();
 	}
 
-	show(): void {
-		this.view.show();
+	show(day?: number): void {
+		this.view.show(day);
 	}
 
 	hide(): void {

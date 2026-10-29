@@ -213,7 +213,7 @@ export class FarmScreenController extends ScreenController {
 		if (this.planningPhase) {
 			this.updatePlanningInventoryDisplay();
 			this.planningPhase.clearSelection();
-			this.planningPhase.show();
+			this.planningPhase.show(this.status.getDay());
 		} else {
 			this.selectedDefenseType = null;
 		}
