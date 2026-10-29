@@ -169,15 +169,15 @@ export class MorningEventsScreenView implements View {
         this.titleText = this.group.findOne<Konva.Text>(".dayText")!;
 
         // Morning gazette (facts, quiz result, etc.)
-        const gazette = new Konva.Group({ x: GAZETTE.x, y: GAZETTE.y, rotation: -1, listening: false });
+        const gazette = new Konva.Group({ x: GAZETTE.x, y: GAZETTE.y, listening: false });
         gazette.add(new Konva.Rect({ x: 4, y: 6, width: GAZETTE.width, height: GAZETTE.height, cornerRadius: 4, fill: "rgba(40, 20, 5, 0.3)" }));
         gazette.add(new Konva.Rect({ width: GAZETTE.width, height: GAZETTE.height, cornerRadius: 4, fill: PARCHMENT, stroke: "#b89a6a", strokeWidth: 2 }));
         gazette.add(new Konva.Text({ y: 10, width: GAZETTE.width, text: "THE MORNING GAZETTE", fontSize: 15, fontFamily: "Georgia", fontStyle: "bold", letterSpacing: 2, fill: INK, align: "center" }));
         gazette.add(new Konva.Line({ points: [16, 32, GAZETTE.width - 16, 32], stroke: INK, strokeWidth: 2 }));
         gazette.add(new Konva.Line({ points: [16, 36, GAZETTE.width - 16, 36], stroke: INK, strokeWidth: 0.8 }));
-        this.infoHeadline = new Konva.Text({ x: 20, y: 44, width: GAZETTE.width - 40, text: "", fontSize: 16, fontFamily: "Georgia", fontStyle: "bold", fill: "#8a2a1a", align: "center" });
-        this.infoText = new Konva.Text({ x: 20, y: 66, width: GAZETTE.width - 40, height: 58, text: "", fontSize: 15, fontFamily: "Georgia", fill: INK, align: "center", lineHeight: 1.25, ellipsis: true });
-        this.infoFooter = new Konva.Text({ x: 20, y: GAZETTE.height - 22, width: GAZETTE.width - 40, text: "", fontSize: 12, fontFamily: "Georgia", fontStyle: "italic", fill: "#7a5a3a", align: "center" });
+        this.infoHeadline = new Konva.Text({ width: GAZETTE.width, text: "", fontSize: 16, fontFamily: "Georgia", fontStyle: "bold", fill: "#8a2a1a", align: "center" });
+        this.infoText = new Konva.Text({ width: GAZETTE.width - 36, x: 18, text: "", fontSize: 15, fontFamily: "Georgia", fill: INK, align: "center", lineHeight: 1.25 });
+        this.infoFooter = new Konva.Text({ width: GAZETTE.width, text: "", fontSize: 12, fontFamily: "Georgia", fontStyle: "italic", fill: "#7a5a3a", align: "center" });
         gazette.add(this.infoHeadline, this.infoText, this.infoFooter);
         gazette.add(new Konva.Circle({ x: GAZETTE.width / 2, y: -2, radius: 7, fill: "#d64535", stroke: "#7a1f14", strokeWidth: 1.5 }));
         gazette.add(new Konva.Circle({ x: GAZETTE.width / 2 - 2, y: -4, radius: 2, fill: "rgba(255, 255, 255, 0.7)" }));
@@ -294,7 +294,21 @@ export class MorningEventsScreenView implements View {
         this.infoText.text(first.replace(/^Fact:\s*/, "").replace(/^[✓✗]\s*/, ""));
         this.infoText.fill(isFact ? INK : color);
         this.infoFooter.text(footer);
+        this.layoutGazetteCopy();
         this.group.getLayer()?.draw();
+    }
+
+    private layoutGazetteCopy(): void {
+        const top = 44;
+        const bottom = GAZETTE.height - 12;
+        const gap = 6;
+        const blockHeight = this.infoHeadline.height() + gap + this.infoText.height() + (this.infoFooter.text() ? gap + this.infoFooter.height() : 0);
+        let y = top + Math.max(0, (bottom - top - blockHeight) / 2);
+        this.infoHeadline.y(y);
+        y += this.infoHeadline.height() + gap;
+        this.infoText.y(y);
+        y += this.infoText.height() + gap;
+        this.infoFooter.y(y);
     }
 
     setDailyQuizButtonVisible(visible: boolean): void {

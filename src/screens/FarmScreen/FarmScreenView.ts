@@ -310,6 +310,8 @@ export class FarmScreenView implements View {
 	private startCaption: Konva.Text;
 	private startCallout: Konva.Group;
 	private startCalloutLabel!: Konva.Text;
+	private startCalloutLip!: Konva.Rect;
+	private startCalloutFace!: Konva.Rect;
 	private mouseX: number = 0;
 	private mouseY: number = 0;
 	private placementHintDefault = "Place defenses, then press the green START button. Press M for a mine.";
@@ -545,7 +547,12 @@ export class FarmScreenView implements View {
 			}
 			this.startRoundHandler?.();
 		});
-		this.startRoundGroup.on("mouseenter", () => this.showHudTooltip(this.startRoundGroup, this.startRoundTooltipMessage));
+		this.startRoundGroup.on("mouseenter", () => {
+			if (this.startCallout.visible()) {
+				return;
+			}
+			this.showHudTooltip(this.startRoundGroup, this.startRoundTooltipMessage);
+		});
 		this.startRoundGroup.on("mouseleave", () => this.hideHudTooltip());
 		this.hudGroup.add(this.startRoundGroup);
 		this.startCaption = new Konva.Text({
@@ -663,45 +670,51 @@ export class FarmScreenView implements View {
 			fill: "#1b6b31",
 			listening: false,
 		}));
-		group.add(new Konva.Rect({
-			x: -72,
+		this.startCalloutLip = new Konva.Rect({
 			y: 8,
-			width: 144,
 			height: 36,
 			cornerRadius: 18,
 			fill: "#1b6b31",
 			listening: false,
-		}));
-		group.add(new Konva.Rect({
-			x: -72,
+		});
+		this.startCalloutFace = new Konva.Rect({
 			y: 6,
-			width: 144,
 			height: 36,
 			cornerRadius: 18,
 			fill: "#2fa84f",
 			stroke: "#fff3d6",
 			strokeWidth: 2,
-		}));
+		});
 		this.startCalloutLabel = new Konva.Text({
-			x: -72,
-			y: 13,
-			width: 144,
+			x: 0,
+			y: 15,
 			text: "START ROUND",
 			fontSize: 14,
 			fontFamily: "Arial",
 			fontStyle: "bold",
-			letterSpacing: 1,
 			fill: "white",
-			align: "center",
 			listening: false,
 		});
+		group.add(this.startCalloutLip);
+		group.add(this.startCalloutFace);
 		group.add(this.startCalloutLabel);
+		this.layoutStartCallout();
 		const fire = () => {
 			if (!this.startRoundButtonEnabled) return;
 			this.startRoundHandler?.();
 		};
 		group.on("click tap", fire);
 		return group;
+	}
+
+	private layoutStartCallout(): void {
+		const textW = Math.ceil(this.startCalloutLabel.getTextWidth());
+		const width = textW + 36;
+		const x = Math.round(-width / 2);
+		this.startCalloutLip.setAttrs({ x, width });
+		this.startCalloutFace.setAttrs({ x, width });
+		this.startCalloutLabel.x(0);
+		this.startCalloutLabel.offsetX(textW / 2);
 	}
 
 	private createAmbience(): void {
@@ -1045,6 +1058,7 @@ export class FarmScreenView implements View {
 		this.startCallout.y(86);
 		this.startCallout.scale({ x: 1, y: 1 });
 		if (enabled) {
+			this.hideHudTooltip();
 			this.startCallout.moveToTop();
 		}
 		this.group.getLayer()?.draw();
@@ -1054,6 +1068,7 @@ export class FarmScreenView implements View {
 		this.startRoundTooltipMessage = message;
 		const skip = /skip|defeated/i.test(message);
 		this.startCalloutLabel.text(skip ? "NEXT DAY" : "START ROUND");
+		this.layoutStartCallout();
 		this.startCaption.text(skip ? "NEXT" : "START");
 	}
 
