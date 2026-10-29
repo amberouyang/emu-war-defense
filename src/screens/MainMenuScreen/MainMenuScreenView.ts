@@ -188,15 +188,16 @@ export class MainMenuScreenView implements View {
 	private createTitle(): Konva.Group {
 		const title = new Konva.Group({ x: STAGE_WIDTH / 2, y: 0, listening: false });
 
-		const ribbon = new Konva.Group({ y: 58 });
-		const ribbonWidth = 380;
+		const ribbon = new Konva.Group({ y: 80 });
+		const ribbonWidth = 320;
+		const tail = 18;
 		ribbon.add(new Konva.Line({
-			points: [-ribbonWidth / 2 - 26, 4, -ribbonWidth / 2 + 6, 4, -ribbonWidth / 2 + 6, 34, -ribbonWidth / 2 - 26, 34, -ribbonWidth / 2 - 14, 19],
+			points: [-ribbonWidth / 2 - tail, 4, -ribbonWidth / 2 + 6, 4, -ribbonWidth / 2 + 6, 34, -ribbonWidth / 2 - tail, 34, -ribbonWidth / 2 - 10, 19],
 			closed: true,
 			fill: COLORS.plankDark,
 		}));
 		ribbon.add(new Konva.Line({
-			points: [ribbonWidth / 2 + 26, 4, ribbonWidth / 2 - 6, 4, ribbonWidth / 2 - 6, 34, ribbonWidth / 2 + 26, 34, ribbonWidth / 2 + 14, 19],
+			points: [ribbonWidth / 2 + tail, 4, ribbonWidth / 2 - 6, 4, ribbonWidth / 2 - 6, 34, ribbonWidth / 2 + tail, 34, ribbonWidth / 2 + 10, 19],
 			closed: true,
 			fill: COLORS.plankDark,
 		}));
@@ -214,10 +215,10 @@ export class MainMenuScreenView implements View {
 			width: ribbonWidth,
 			height: 32,
 			text: "THE GREAT EMU WAR OF 1932",
-			fontSize: 15,
+			fontSize: 14,
 			fontFamily: FONT,
 			fontStyle: "bold",
-			letterSpacing: 3,
+			letterSpacing: 1,
 			fill: COLORS.plankText,
 			align: "center",
 			verticalAlign: "middle",
@@ -225,7 +226,7 @@ export class MainMenuScreenView implements View {
 		title.add(ribbon);
 
 		const heading = new Konva.Text({
-			y: 98,
+			y: 118,
 			text: "FARM DEFENSE",
 			fontSize: 74,
 			fontFamily: TITLE_FONT,
@@ -245,7 +246,7 @@ export class MainMenuScreenView implements View {
 		title.add(heading);
 
 		const tagline = new Konva.Text({
-			y: 190,
+			y: 202,
 			text: "Defend your wheat. Outlast the emus.",
 			fontSize: 20,
 			fontFamily: FONT,
