@@ -1,13 +1,13 @@
 import { BulletModel } from "./BulletModel";
 import { BulletView } from "./BulletView";
 import type { ObstacleController } from "../Obstacle/ObstacleController";
-import { GAME_AREA_Y } from "../../constants";
+import { GAME_AREA_Y, type Direction } from "../../constants";
 
 export class BulletController {
   model: BulletModel;
   view: BulletView;
 
-  constructor(x: number, y: number, dir: "up" | "down" | "left" | "right") {
+  constructor(x: number, y: number, dir: Direction) {
     // Initialize bullet model and view at given position and direction
     this.model = new BulletModel(x, y, dir);
     this.view = new BulletView(this.model);

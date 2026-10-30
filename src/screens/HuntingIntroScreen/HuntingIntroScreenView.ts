@@ -56,7 +56,7 @@ export class HuntingIntroScreenView implements View {
     }));
 
     const rows: [string, string][] = [
-      ["WASD / ARROWS", "Move through the scrub"],
+      ["WASD / ARROWS", "Move in eight directions"],
       ["SPACE", "Shoot. Each emu takes 3 hits"],
       ["ROCKS & BUSHES", "Block your path and your shots"],
       ["1:00  /  100 AMMO", "Clear the nest before either runs out"],

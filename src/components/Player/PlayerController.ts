@@ -3,6 +3,7 @@ import { PlayerView } from "./PlayerView";
 import type { ObstacleController } from "../Obstacle/ObstacleController";
 import { BulletController } from "../Bullet/BulletController";
 import {AudioManager} from "../../services/AudioManager";
+import type { Direction } from "../../constants";
 
 // PlayerController: Handles player input, movement, collision, and shooting
 export class PlayerController {
@@ -25,28 +26,21 @@ export class PlayerController {
     const wasMoving = this.model.isMoving; 
     this.model.isMoving = false;
 
-    // Process movement keys (WASD and arrows)
+    // Process movement keys (WASD and arrows), including diagonals
     const up = keys.has("w") || keys.has("W") || keys.has("ArrowUp");
     const down = keys.has("s") || keys.has("S") || keys.has("ArrowDown");
     const left = keys.has("a") || keys.has("A") || keys.has("ArrowLeft");
     const right = keys.has("d") || keys.has("D") || keys.has("ArrowRight");
-    if (up) {
-      dy -= speed;
-      this.model.direction = "up";
+    if (up) dy -= 1;
+    else if (down) dy += 1;
+    if (left) dx -= 1;
+    else if (right) dx += 1;
+    if (dx !== 0 || dy !== 0) {
       this.model.isMoving = true;
-    } else if (down) {
-      dy += speed;
-      this.model.direction = "down";
-      this.model.isMoving = true;
-    }
-    if (left) {
-      dx -= speed;
-      this.model.direction = "left";
-      this.model.isMoving = true;
-    } else if (right) {
-      dx += speed;
-      this.model.direction = "right";
-      this.model.isMoving = true;
+      this.model.direction = this.facingFromAxes(dx, dy);
+      const length = Math.hypot(dx, dy);
+      dx = (dx / length) * speed;
+      dy = (dy / length) * speed;
     }
 
     // Calculate next position
@@ -60,15 +54,19 @@ export class PlayerController {
     nextX = Math.max(radius, Math.min(stageWidth - radius, nextX));
     nextY = Math.max(gameAreaY + radius, Math.min(gameAreaY + gameAreaHeight - radius, nextY));
 
-    // Check for obstacle collisions
-    const nextBox = { x: nextX, y: nextY, w: 30, h: 30 };
+    // Check for obstacle collisions, sliding on one axis if a diagonal is blocked
     const obstacles = obstacleControllers.map(c => c.getModel());
-    const blocked = obstacles.some((o) => o.collides(nextBox));
-    let isCurrentlyMoving = this.model.isMoving;
-    if (!blocked) {
+    const canStand = (x: number, y: number) => !obstacles.some((o) => o.collides({ x, y, w: 30, h: 30 }));
+    if (canStand(nextX, nextY)) {
       this.model.x = nextX;
       this.model.y = nextY;
+    } else if (dx !== 0 && canStand(nextX, this.model.y)) {
+      this.model.x = nextX;
+    } else if (dy !== 0 && canStand(this.model.x, nextY)) {
+      this.model.y = nextY;
     }
+
+    const isCurrentlyMoving = this.model.isMoving;
 
     if (isCurrentlyMoving && !wasMoving) {
       // Start sound: Player was NOT moving, but is now moving.
@@ -80,6 +78,17 @@ export class PlayerController {
 
     // Update view to match model
     this.view.update();
+  }
+
+  private facingFromAxes(dx: number, dy: number): Direction {
+    if (dy < 0 && dx < 0) return "up-left";
+    if (dy < 0 && dx > 0) return "up-right";
+    if (dy > 0 && dx < 0) return "down-left";
+    if (dy > 0 && dx > 0) return "down-right";
+    if (dy < 0) return "up";
+    if (dy > 0) return "down";
+    if (dx < 0) return "left";
+    return "right";
   }
 
   // Shoot a bullet from the player's current position and direction

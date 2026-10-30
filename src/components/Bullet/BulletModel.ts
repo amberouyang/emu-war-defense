@@ -1,14 +1,16 @@
+import { DIRECTION_VECTORS, type Direction } from "../../constants";
+
 export class BulletModel {
   x: number;
   y: number;
   speed = 6; // Movement speed per update
   active = true; // Indicates whether the bullet is still valid
-  public direction: "up" | "down" | "left" | "right";
+  public direction: Direction;
 
   constructor(
     x: number,
     y: number,
-    direction: "up" | "down" | "left" | "right"
+    direction: Direction
   ) {
     // Initialize position and direction
     this.x = x;
@@ -20,11 +22,9 @@ export class BulletModel {
     // Skip movement if bullet is inactive
     if (!this.active) return;
 
-    // Move bullet in its direction
-    if (this.direction === "up") this.y -= this.speed;
-    if (this.direction === "down") this.y += this.speed;
-    if (this.direction === "left") this.x -= this.speed;
-    if (this.direction === "right") this.x += this.speed;
+    const step = DIRECTION_VECTORS[this.direction];
+    this.x += step.dx * this.speed;
+    this.y += step.dy * this.speed;
   }
 
   // Mark bullet as inactive

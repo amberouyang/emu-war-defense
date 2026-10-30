@@ -1,6 +1,7 @@
 import Konva from "konva";
 import { BulletModel } from "./BulletModel";
 import bulletSrc from "../../../assets/bullet.png";
+import { DIRECTION_ANGLE } from "../../constants";
 
 // Pre-load the image once to avoid reloading it for every single bullet shot
 const bulletImageObj = new Image();
@@ -34,7 +35,7 @@ export class BulletView {
 
   // Convert bullet direction to rotation angle
   private dirAngle() {
-    return { up: -90, right: 0, down: 90, left: 180 }[this.model.direction];
+    return DIRECTION_ANGLE[this.model.direction];
   }
 
   // Update bullet’s position and visibility on canvas

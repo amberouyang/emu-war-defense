@@ -186,7 +186,7 @@ export class HuntingScreenView {
 			x: 16,
 			y: 56,
 			width: 520,
-			text: "WASD or arrows to move.  SPACE to shoot.  Esc to pause.",
+			text: "WASD or arrows, including diagonals.  SPACE to shoot.  Esc to pause.",
 			fontSize: 12,
 			fontFamily: "Arial",
 			fontStyle: "bold",

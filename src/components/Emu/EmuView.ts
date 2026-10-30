@@ -63,9 +63,11 @@ export class EmuView {
 
   // Update position, visibility, flashing, and facing
   update() {
-    if (this.model.currentDirection === "left") this.facing = 1;
-    if (this.model.currentDirection === "right") this.facing = -1;
+    const dir = this.model.currentDirection;
+    if (dir.includes("left")) this.facing = 1;
+    if (dir.includes("right")) this.facing = -1;
     this.sprite.scaleX(this.facing);
+    this.sprite.rotation(dir.includes("up") ? -12 : dir.includes("down") ? 12 : 0);
 
     if (this.model.flashTimer > 0) {
       this.model.flashTimer--;
