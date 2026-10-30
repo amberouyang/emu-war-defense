@@ -3,6 +3,7 @@ import { EmuView } from "./EmuView";
 import type { ObstacleController } from "../Obstacle/ObstacleController";
 import type { BulletController } from "../Bullet/BulletController";
 import {AudioManager} from "../../services/AudioManager";
+import { DIRECTION_VECTORS } from "../../constants";
 
 export class EmuController {
   model: EmuModel;
@@ -19,13 +20,9 @@ export class EmuController {
   update(obstacleControllers: ObstacleController[], stageWidth: number, stageHeight: number, gameAreaY: number = 0, gameAreaHeight: number = stageHeight) {
     if (!this.model.active) return;
 
-    // Predict next position based on current direction
-    let nextX = this.model.x;
-    let nextY = this.model.y;
-    if (this.model.currentDirection === "up") nextY -= this.model.speed;
-    if (this.model.currentDirection === "down") nextY += this.model.speed;
-    if (this.model.currentDirection === "left") nextX -= this.model.speed;
-    if (this.model.currentDirection === "right") nextX += this.model.speed;
+    const step = DIRECTION_VECTORS[this.model.currentDirection];
+    let nextX = this.model.x + step.dx * this.model.speed;
+    let nextY = this.model.y + step.dy * this.model.speed;
 
     const radius = 12;
     const originalNextX = nextX;
@@ -37,19 +34,24 @@ export class EmuController {
 
     const hitBoundary = nextX !== originalNextX || nextY !== originalNextY;
 
-    // Check for obstacle collision
-    const nextBox = { x: nextX, y: nextY, w: radius * 2, h: radius * 2 };
     const obstacles = obstacleControllers.map(c => c.getModel());
-    const blockedByObstacle = obstacles.some((o) => o.collides(nextBox));
+    const blocked = (x: number, y: number) =>
+      obstacles.some((o) => o.collides({ x, y, w: radius * 2, h: radius * 2 }));
 
-    if (blockedByObstacle || hitBoundary) {
-      // Stop and change direction on collision or boundary hit
+    if (hitBoundary) {
       this.model.randomizeDirection();
-    } else {
-      // Move to next position
+    } else if (!blocked(nextX, nextY)) {
       this.model.x = nextX;
       this.model.y = nextY;
       this.model.tickDirectionTimer();
+    } else if (step.dx !== 0 && !blocked(nextX, this.model.y)) {
+      this.model.x = nextX;
+      this.model.tickDirectionTimer();
+    } else if (step.dy !== 0 && !blocked(this.model.x, nextY)) {
+      this.model.y = nextY;
+      this.model.tickDirectionTimer();
+    } else {
+      this.model.randomizeDirection();
     }
 
     // Update view (position, flash effect, orientation)

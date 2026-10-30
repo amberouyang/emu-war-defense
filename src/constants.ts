@@ -14,6 +14,49 @@ export const PLANTER_HEIGHT = 20;
 export const PLANTER_WIDTH = 40;
 export const ONE_OVER_ROOT_TWO = 1 / Math.sqrt(2);
 
+export type Direction =
+    | "up"
+    | "down"
+    | "left"
+    | "right"
+    | "up-left"
+    | "up-right"
+    | "down-left"
+    | "down-right";
+
+export const DIRECTIONS: Direction[] = [
+    "up",
+    "down",
+    "left",
+    "right",
+    "up-left",
+    "up-right",
+    "down-left",
+    "down-right",
+];
+
+export const DIRECTION_VECTORS: Record<Direction, { dx: number; dy: number }> = {
+    up: { dx: 0, dy: -1 },
+    down: { dx: 0, dy: 1 },
+    left: { dx: -1, dy: 0 },
+    right: { dx: 1, dy: 0 },
+    "up-left": { dx: -ONE_OVER_ROOT_TWO, dy: -ONE_OVER_ROOT_TWO },
+    "up-right": { dx: ONE_OVER_ROOT_TWO, dy: -ONE_OVER_ROOT_TWO },
+    "down-left": { dx: -ONE_OVER_ROOT_TWO, dy: ONE_OVER_ROOT_TWO },
+    "down-right": { dx: ONE_OVER_ROOT_TWO, dy: ONE_OVER_ROOT_TWO },
+};
+
+export const DIRECTION_ANGLE: Record<Direction, number> = {
+    up: -90,
+    "up-right": -45,
+    right: 0,
+    "down-right": 45,
+    down: 90,
+    "down-left": 135,
+    left: 180,
+    "up-left": -135,
+};
+
 // HUD layout constants
 export const HUD_HEIGHT = 80; // Height of the HUD banner
 export const GAME_AREA_Y = HUD_HEIGHT; // Game area starts below HUD

@@ -1,8 +1,10 @@
+import type { Direction } from "../../constants";
+
 // PlayerModel: Stores player state and provides movement logic
 export class PlayerModel {
   x: number;
   y: number;
-  direction: "up" | "down" | "left" | "right" = "up";
+  direction: Direction = "up";
   speed = 1;
   isMoving = false;
 

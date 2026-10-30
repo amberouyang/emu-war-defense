@@ -1,7 +1,9 @@
+import { DIRECTIONS, type Direction } from "../../constants";
+
 export class EmuModel {
   x: number;
   y: number;
-  currentDirection: "up" | "down" | "left" | "right" = "right";
+  currentDirection: Direction = "right";
   speed = 0.8;
   hitCount = 0;
   maxHits = 3;
@@ -15,16 +17,9 @@ export class EmuModel {
     this.randomizeDirection();
   }
 
-  // Pick a random movement direction and reset timer
+  // Pick a random movement direction, including diagonals, and reset timer
   randomizeDirection() {
-    const directions: ("up" | "down" | "left" | "right")[] = [
-      "up",
-      "down",
-      "left",
-      "right",
-    ];
-    this.currentDirection =
-      directions[Math.floor(Math.random() * directions.length)];
+    this.currentDirection = DIRECTIONS[Math.floor(Math.random() * DIRECTIONS.length)];
     this.directionChangeTimer = Math.floor(Math.random() * 60) + 30;
   }
 

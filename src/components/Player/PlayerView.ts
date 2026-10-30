@@ -1,5 +1,6 @@
 import Konva from "konva";
 import { PlayerModel } from "./PlayerModel";
+import { DIRECTION_ANGLE } from "../../constants";
 
 // PlayerView: Renders player on canvas and updates appearance
 export class PlayerView {
@@ -70,8 +71,7 @@ export class PlayerView {
   // Update position, gun rotation, and movement color
   update() {
     this.group.position({ x: this.model.x, y: this.model.y });
-    const angleMap = { up: -90, right: 0, down: 90, left: 180 };
-    this.gun.rotation(angleMap[this.model.direction]);
+    this.gun.rotation(DIRECTION_ANGLE[this.model.direction]);
     this.gun.fill(this.model.isMoving ? "#8d939a" : "#3a3f45");
   }
 
