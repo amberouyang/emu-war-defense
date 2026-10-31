@@ -961,9 +961,7 @@ export class FarmScreenView implements View {
 	//Hide and Show hunt menu:
 
 	showHuntMenuOverlay(): void {
-		this.huntMenuOverlay.moveToTop();
-		this.huntMenuOverlay.visible(true);
-		this.group.getLayer()?.draw();
+		this.presentMinigameOverlay(this.huntMenuOverlay, this.eggMenuOverlay);
 	}
 
 	hideHuntMenuOverlay(): void {
@@ -974,13 +972,25 @@ export class FarmScreenView implements View {
 	//Hide and Show egg menu:
 
 	showEggMenuOverlay(): void {
-		this.eggMenuOverlay.moveToTop();
-		this.eggMenuOverlay.visible(true);
-		this.group.getLayer()?.draw();
+		this.presentMinigameOverlay(this.eggMenuOverlay, this.huntMenuOverlay);
 	}
 
 	hideEggMenuOverlay(): void {
 		this.eggMenuOverlay.visible(false);
+		this.group.getLayer()?.draw();
+	}
+
+	private presentMinigameOverlay(overlay: Konva.Group, other: Konva.Group): void {
+		other.visible(false);
+		overlay.visible(true);
+		const layer = this.group.getLayer();
+		if (layer) {
+			overlay.moveTo(layer);
+			overlay.moveToTop();
+			layer.draw();
+			return;
+		}
+		overlay.moveToTop();
 		this.group.getLayer()?.draw();
 	}
 
