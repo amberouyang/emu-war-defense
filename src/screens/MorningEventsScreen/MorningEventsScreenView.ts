@@ -74,7 +74,7 @@ const sectionLabel = (x: number, y: number, width: number, text: string): Konva.
 };
 
 const STALL = { x: 90, y: 150, width: 620, height: 489 };
-const GAZETTE = { x: 170, y: 300, width: 460, height: 152 };
+const GAZETTE = { x: 262, y: 300, width: 368, height: 146 };
 const BUTTON_X = STAGE_WIDTH / 2 - 150;
 const BUTTON_WIDTH = 300;
 
@@ -90,9 +90,9 @@ export class MorningEventsScreenView implements View {
     private moneyText: Konva.Text;
     private cropText: Konva.Text;
     private eggText: Konva.Text;
-    private infoHeadline: Konva.Text;
-    private infoText: Konva.Text;
-    private infoFooter: Konva.Text;
+    private infoHeadline!: Konva.Text;
+    private infoText!: Konva.Text;
+    private infoFooter!: Konva.Text;
     private dailyQuizButton: Konva.Group;
     private quizBadge: Konva.Group;
     private continueButton: Konva.Group;
@@ -104,6 +104,8 @@ export class MorningEventsScreenView implements View {
     private buyCropHandler: (() => void) | null = null;
     private sellCropHandler: (() => void) | null = null;
     private sellEggHandler: (() => void) | null = null;
+    private lanterns: Konva.Group[] = [];
+    private swingSigns: Konva.Group[] = [];
 
     constructor(
         onBuy: () => void,
@@ -160,32 +162,37 @@ export class MorningEventsScreenView implements View {
         if (!stallImage.complete) {
             stallImage.onload = () => this.group.getLayer()?.batchDraw();
         }
+        this.drawStallInterior();
+        this.drawGazette();
         this.drawCounter();
         this.drawSign();
 
-        this.moneyText = this.createWalletChip(STAGE_WIDTH / 2 - 192, "MONEY", coinIcon(20, 18));
+        this.moneyText = this.createWalletChip(STAGE_WIDTH / 2 - 198, "MONEY", coinIcon(20, 18));
         this.cropText = this.createWalletChip(STAGE_WIDTH / 2 - 60, "CROPS", imageIcon(images.wheat, 20, 18, 30));
-        this.eggText = this.createWalletChip(STAGE_WIDTH / 2 + 72, "EGGS", eggIcon(20, 18, 0.95));
+        this.eggText = this.createWalletChip(STAGE_WIDTH / 2 + 78, "EGGS", eggIcon(20, 18, 0.95));
         this.titleText = this.group.findOne<Konva.Text>(".dayText")!;
 
-        // Morning gazette (facts, quiz result, etc.)
-        const gazette = new Konva.Group({ x: GAZETTE.x, y: GAZETTE.y, listening: false });
-        gazette.add(new Konva.Rect({ x: 4, y: 6, width: GAZETTE.width, height: GAZETTE.height, cornerRadius: 4, fill: "rgba(40, 20, 5, 0.3)" }));
-        gazette.add(new Konva.Rect({ width: GAZETTE.width, height: GAZETTE.height, cornerRadius: 4, fill: PARCHMENT, stroke: "#b89a6a", strokeWidth: 2 }));
-        gazette.add(new Konva.Text({ y: 10, width: GAZETTE.width, text: "THE MORNING GAZETTE", fontSize: 15, fontFamily: "Georgia", fontStyle: "bold", letterSpacing: 2, fill: INK, align: "center" }));
-        gazette.add(new Konva.Line({ points: [16, 32, GAZETTE.width - 16, 32], stroke: INK, strokeWidth: 2 }));
-        gazette.add(new Konva.Line({ points: [16, 36, GAZETTE.width - 16, 36], stroke: INK, strokeWidth: 0.8 }));
-        this.infoHeadline = new Konva.Text({ width: GAZETTE.width, text: "", fontSize: 16, fontFamily: "Georgia", fontStyle: "bold", fill: "#8a2a1a", align: "center" });
-        this.infoText = new Konva.Text({ width: GAZETTE.width - 36, x: 18, text: "", fontSize: 15, fontFamily: "Georgia", fill: INK, align: "center", lineHeight: 1.25 });
-        this.infoFooter = new Konva.Text({ width: GAZETTE.width, text: "", fontSize: 12, fontFamily: "Georgia", fontStyle: "italic", fill: "#7a5a3a", align: "center" });
-        gazette.add(this.infoHeadline, this.infoText, this.infoFooter);
-        gazette.add(new Konva.Circle({ x: GAZETTE.width / 2, y: -2, radius: 7, fill: "#d64535", stroke: "#7a1f14", strokeWidth: 1.5 }));
-        gazette.add(new Konva.Circle({ x: GAZETTE.width / 2 - 2, y: -4, radius: 2, fill: "rgba(255, 255, 255, 0.7)" }));
-        this.group.add(gazette);
+        this.group.add(makeButton({
+            x: BUTTON_X,
+            y: 466,
+            width: BUTTON_WIDTH,
+            height: 52,
+            text: "OPEN SHOP",
+            color: "#f0a020",
+            lip: "#a0620a",
+            badge: "$",
+        }, () => onOpenShop?.()));
 
-        this.group.add(makeButton({ x: BUTTON_X, y: 466, width: BUTTON_WIDTH, height: 50, text: "OPEN SHOP", color: "#f0a020", lip: "#a0620a" }, () => onOpenShop?.()));
-
-        this.dailyQuizButton = makeButton({ x: BUTTON_X, y: 528, width: BUTTON_WIDTH, height: 50, text: "DAILY QUIZ", color: "#8e44ad", lip: "#5b2470" }, () => onOpenQuiz?.());
+        this.dailyQuizButton = makeButton({
+            x: BUTTON_X,
+            y: 528,
+            width: BUTTON_WIDTH,
+            height: 52,
+            text: "DAILY QUIZ",
+            color: "#8e44ad",
+            lip: "#5b2470",
+            badge: "?",
+        }, () => onOpenQuiz?.());
         this.quizBadge = new Konva.Group({ x: BUTTON_WIDTH - 10, y: 2, listening: false });
         this.quizBadge.add(new Konva.Rect({ x: -24, y: -10, width: 48, height: 22, cornerRadius: 11, fill: "#e0453a", stroke: "white", strokeWidth: 2 }));
         this.quizBadge.add(new Konva.Text({ x: -24, y: -5, width: 48, text: "NEW!", fontSize: 12, fontFamily: "Arial", fontStyle: "bold", fill: "white", align: "center" }));
@@ -193,40 +200,216 @@ export class MorningEventsScreenView implements View {
         this.dailyQuizButton.visible(false);
         this.group.add(this.dailyQuizButton);
 
-        this.continueButton = makeButton({ x: BUTTON_X, y: 528, width: BUTTON_WIDTH, height: 50, text: "CONTINUE TO FARM", color: "#2fa84f", lip: "#1b6b31" }, onContinue);
+        this.continueButton = makeButton({
+            x: BUTTON_X,
+            y: 528,
+            width: BUTTON_WIDTH,
+            height: 52,
+            text: "CONTINUE TO FARM",
+            color: "#2fa84f",
+            lip: "#1b6b31",
+        }, onContinue);
         this.group.add(this.continueButton);
+    }
+
+    private drawStallInterior(): void {
+        const interior = new Konva.Group({ listening: false });
+        interior.add(new Konva.Rect({
+            x: 132,
+            y: 292,
+            width: 536,
+            height: 352,
+            fillLinearGradientStartPoint: { x: 0, y: 0 },
+            fillLinearGradientEndPoint: { x: 0, y: 352 },
+            fillLinearGradientColorStops: [0, "rgba(92, 54, 24, 0.55)", 1, "rgba(42, 22, 8, 0.72)"],
+        }));
+        for (let i = 0; i < 7; i++) {
+            interior.add(new Konva.Rect({
+                x: 140 + i * 74,
+                y: 300,
+                width: 68,
+                height: 336,
+                fill: i % 2 === 0 ? "rgba(120, 72, 32, 0.28)" : "rgba(70, 40, 16, 0.22)",
+            }));
+        }
+        interior.add(woodRect({ x: 148, y: 292, width: 504, height: 16, cornerRadius: 3, strokeWidth: 2 }));
+        this.group.add(interior);
+
+        this.drawBunting();
+        this.drawLanterns();
+        this.drawChalkboard();
+        this.drawOpenSign();
+    }
+
+    private drawBunting(): void {
+        const bunting = new Konva.Group({ listening: false });
+        bunting.add(new Konva.Line({ points: [150, 262, 650, 266], stroke: "#5a3a1a", strokeWidth: 2.5 }));
+        const colors = ["#c0392b", GOLD, "#fff6df", "#2f6fc4"];
+        for (let i = 0; i < 13; i++) {
+            const x = 160 + i * 38;
+            const y = 262 + (i % 2) * 5;
+            bunting.add(new Konva.Line({
+                points: [x, y, x + 18, y, x + 9, y + 24],
+                closed: true,
+                fill: colors[i % colors.length],
+                stroke: "#4a2c0a",
+                strokeWidth: 1,
+            }));
+        }
+        this.group.add(bunting);
+    }
+
+    private drawLanterns(): void {
+        const spots: [number, string][] = [
+            [176, "#d64535"],
+            [288, "#f0a020"],
+            [400, "#d64535"],
+            [512, "#f0a020"],
+            [624, "#d64535"],
+        ];
+        for (const [x, color] of spots) {
+            const lantern = new Konva.Group({ x, y: 244, listening: false });
+            lantern.add(new Konva.Line({ points: [0, -16, 0, 2], stroke: "#5a3a1a", strokeWidth: 2 }));
+            lantern.add(new Konva.Rect({ x: -7, y: 0, width: 14, height: 5, fill: "#4a2c0a", cornerRadius: 1 }));
+            lantern.add(new Konva.Circle({ y: 22, radius: 15, fill: color, stroke: "#6a1c12", strokeWidth: 1.5 }));
+            lantern.add(new Konva.Circle({ y: 22, radius: 9, fill: "rgba(255, 230, 140, 0.45)" }));
+            lantern.add(new Konva.Circle({ x: -4, y: 16, radius: 3.5, fill: "rgba(255, 255, 255, 0.55)" }));
+            this.group.add(lantern);
+            this.lanterns.push(lantern);
+        }
+    }
+
+    private drawChalkboard(): void {
+        const board = new Konva.Group({ x: 108, y: 304, listening: false });
+        board.add(woodRect({ x: -6, y: -6, width: 144, height: 160, cornerRadius: 8, strokeWidth: 2 }));
+        board.add(new Konva.Rect({ width: 132, height: 148, cornerRadius: 6, fill: "#234536", stroke: "#13261d", strokeWidth: 2 }));
+        board.add(new Konva.Text({
+            x: 6,
+            y: 10,
+            width: 120,
+            text: "TODAY'S PRICES",
+            fontSize: 11,
+            fontFamily: "Arial",
+            fontStyle: "bold",
+            letterSpacing: 1,
+            fill: "#f4e9c8",
+            align: "center",
+        }));
+        board.add(new Konva.Line({ points: [16, 28, 116, 28], stroke: "#f4e9c8", strokeWidth: 1 }));
+        const rows: [string, string][] = [
+            ["Crops sell", `$${ItemCosts[GameItem.Crop]}`],
+            ["Seeds", `$${CROP_BUY_COST}`],
+            ["Eggs", `$${ItemCosts[GameItem.Egg]}`],
+            ["Wire", `$${DEFENSE_CONFIGS.barbed_wire.cost}`],
+            ["Sandbags", `$${DEFENSE_CONFIGS.sandbag.cost}`],
+        ];
+        rows.forEach(([name, price], i) => {
+            const y = 38 + i * 20;
+            board.add(new Konva.Text({ x: 10, y, width: 78, text: name, fontSize: 12, fontFamily: "Georgia", fill: "#e6d7b0" }));
+            board.add(new Konva.Text({ x: 70, y, width: 52, text: price, fontSize: 12, fontFamily: "Arial", fontStyle: "bold", fill: GOLD, align: "right" }));
+        });
+        this.group.add(board);
+    }
+
+    private drawOpenSign(): void {
+        const sign = new Konva.Group({ x: 668, y: 282, rotation: -7, listening: false });
+        sign.add(new Konva.Line({ points: [0, 0, 0, 22], stroke: "#5a3a1a", strokeWidth: 3 }));
+        sign.add(new Konva.Rect({ x: -30, y: 20, width: 60, height: 72, cornerRadius: 6, fill: "#1b6b31", stroke: "#0f3d1c", strokeWidth: 3 }));
+        sign.add(new Konva.Text({
+            x: -30,
+            y: 46,
+            width: 60,
+            text: "OPEN",
+            fontSize: 16,
+            fontFamily: "Arial",
+            fontStyle: "bold",
+            letterSpacing: 2,
+            fill: GOLD,
+            align: "center",
+        }));
+        this.group.add(sign);
+        this.swingSigns.push(sign);
+    }
+
+    private drawGazette(): void {
+        const gazette = new Konva.Group({ x: GAZETTE.x, y: GAZETTE.y, listening: false });
+        gazette.add(woodRect({ x: -10, y: -10, width: GAZETTE.width + 20, height: GAZETTE.height + 20, cornerRadius: 8, strokeWidth: 2 }));
+        gazette.add(new Konva.Rect({ x: 3, y: 5, width: GAZETTE.width, height: GAZETTE.height, fill: "#e5d4ae" }));
+        gazette.add(new Konva.Rect({ width: GAZETTE.width, height: GAZETTE.height, fill: PARCHMENT, stroke: "#c9a66b", strokeWidth: 1.5 }));
+        gazette.add(new Konva.Line({ points: [GAZETTE.width - 28, 0, GAZETTE.width, 0, GAZETTE.width, 28], closed: true, fill: "#efe2c2" }));
+        gazette.add(new Konva.Text({
+            y: 8,
+            width: GAZETTE.width,
+            text: "THE MORNING GAZETTE",
+            fontSize: 14,
+            fontFamily: "Georgia",
+            fontStyle: "bold",
+            letterSpacing: 1.5,
+            fill: INK,
+            align: "center",
+        }));
+        gazette.add(new Konva.Line({ points: [14, 28, GAZETTE.width - 14, 28], stroke: INK, strokeWidth: 2 }));
+        gazette.add(new Konva.Line({ points: [14, 32, GAZETTE.width - 14, 32], stroke: INK, strokeWidth: 0.8 }));
+        gazette.add(new Konva.Text({
+            y: 36,
+            width: GAZETTE.width,
+            text: "CAMPION, WESTERN AUSTRALIA  •  1932",
+            fontSize: 9,
+            fontFamily: "Georgia",
+            fontStyle: "italic",
+            fill: "#7a5a3a",
+            align: "center",
+        }));
+        this.infoHeadline = new Konva.Text({ width: GAZETTE.width, text: "", fontSize: 15, fontFamily: "Georgia", fontStyle: "bold", fill: "#8a2a1a", align: "center" });
+        this.infoText = new Konva.Text({ width: GAZETTE.width - 28, x: 14, text: "", fontSize: 14, fontFamily: "Georgia", fill: INK, align: "center", lineHeight: 1.25 });
+        this.infoFooter = new Konva.Text({ width: GAZETTE.width, text: "", fontSize: 11, fontFamily: "Georgia", fontStyle: "italic", fill: "#7a5a3a", align: "center" });
+        gazette.add(this.infoHeadline, this.infoText, this.infoFooter);
+        gazette.add(new Konva.Circle({ x: GAZETTE.width / 2, y: -8, radius: 7, fill: "#d64535", stroke: "#7a1f14", strokeWidth: 1.5 }));
+        gazette.add(new Konva.Circle({ x: GAZETTE.width / 2 - 2, y: -10, radius: 2, fill: "rgba(255, 255, 255, 0.7)" }));
+        this.group.add(gazette);
     }
 
     private drawSign(): void {
         const sign = new Konva.Group({ listening: false });
-        for (const ropeX of [250, 550]) {
-            sign.add(new Konva.Line({ points: [ropeX, 0, ropeX, 22], stroke: "#5a3a1a", strokeWidth: 3 }));
+        for (const ropeX of [236, 564]) {
+            sign.add(new Konva.Line({ points: [ropeX, 0, ropeX, 18], stroke: "#5a3a1a", strokeWidth: 4 }));
+            sign.add(new Konva.Circle({ x: ropeX, y: 4, radius: 4, fill: "#3a2412", stroke: "#a07a4a", strokeWidth: 1 }));
         }
-        sign.add(woodRect({ x: 200, y: 14, width: 400, height: 66, cornerRadius: 10 }));
-        sign.add(new Konva.Line({ points: [206, 47, 594, 47], stroke: "rgba(0, 0, 0, 0.22)", strokeWidth: 1 }));
-        for (const nailX of [214, 586]) {
-            sign.add(new Konva.Circle({ x: nailX, y: 28, radius: 3, fill: "#3a2412", stroke: "#a07a4a", strokeWidth: 1 }));
+        sign.add(new Konva.Line({
+            points: [188, 36, 168, 18, 168, 72, 188, 54],
+            closed: true,
+            fill: "#4a2a10",
+        }));
+        sign.add(new Konva.Line({
+            points: [612, 36, 632, 18, 632, 72, 612, 54],
+            closed: true,
+            fill: "#4a2a10",
+        }));
+        sign.add(woodRect({ x: 188, y: 12, width: 424, height: 62, cornerRadius: 8 }));
+        sign.add(new Konva.Line({ points: [198, 43, 602, 43], stroke: "rgba(0, 0, 0, 0.22)", strokeWidth: 1 }));
+        for (const nailX of [204, 596]) {
+            sign.add(new Konva.Circle({ x: nailX, y: 26, radius: 3.5, fill: "#3a2412", stroke: "#c9a66b", strokeWidth: 1 }));
         }
         sign.add(new Konva.Text({
-            y: 26,
+            y: 24,
             width: STAGE_WIDTH,
             text: "MORNING MARKET",
-            fontSize: 32,
+            fontSize: 30,
             fontFamily: "Arial",
             fontStyle: "bold",
-            letterSpacing: 2,
+            letterSpacing: 3,
             fill: GOLD,
             stroke: "#4a2c0a",
             strokeWidth: 3,
             fillAfterStrokeEnabled: true,
             align: "center",
         }));
-        sign.add(new Konva.Rect({ x: STAGE_WIDTH / 2 - 62, y: 68, width: 124, height: 26, cornerRadius: 6, fill: "#c0392b", stroke: "#7a1f14", strokeWidth: 2 }));
+        sign.add(new Konva.Rect({ x: STAGE_WIDTH / 2 - 70, y: 66, width: 140, height: 28, cornerRadius: 14, fill: "#c0392b", stroke: "#7a1f14", strokeWidth: 2 }));
         sign.add(new Konva.Text({
             name: "dayText",
-            x: STAGE_WIDTH / 2 - 62,
-            y: 74,
-            width: 124,
+            x: STAGE_WIDTH / 2 - 70,
+            y: 72,
+            width: 140,
             text: "DAY 1",
             fontSize: 15,
             fontFamily: "Arial",
@@ -240,26 +423,32 @@ export class MorningEventsScreenView implements View {
 
     private drawCounter(): void {
         const counter = new Konva.Group({ listening: false });
-        counter.add(woodRect({ x: 100, y: 646, width: 600, height: 70, cornerRadius: 8 }));
-        counter.add(new Konva.Rect({ x: 100, y: 646, width: 600, height: 6, fill: "rgba(255, 220, 170, 0.25)" }));
-        for (const wx of [128, 168, 208]) {
-            counter.add(imageIcon(images.wheat, wx, 620, 52));
+        counter.add(woodRect({ x: 96, y: 640, width: 608, height: 74, cornerRadius: 8 }));
+        counter.add(new Konva.Rect({ x: 96, y: 640, width: 608, height: 8, fill: "rgba(255, 220, 170, 0.28)" }));
+        counter.add(new Konva.Rect({ x: 118, y: 602, width: 70, height: 44, fill: "#8a5a2b", stroke: "#4a2c0a", strokeWidth: 2, cornerRadius: 3 }));
+        counter.add(new Konva.Rect({ x: 124, y: 608, width: 58, height: 8, fill: "#c9a66b" }));
+        for (const wx of [210, 248, 286]) {
+            counter.add(imageIcon(images.wheat, wx, 618, 54));
         }
-        counter.add(new Konva.Ellipse({ x: 620, y: 640, radiusX: 46, radiusY: 10, fill: "#8a5a2b", stroke: "#4a2c0a", strokeWidth: 2 }));
-        for (const [ex, ey] of [[598, 628], [620, 622], [642, 628], [610, 636], [632, 636]]) {
-            counter.add(eggIcon(ex, ey, 0.9));
+        counter.add(new Konva.Ellipse({ x: 360, y: 636, radiusX: 22, radiusY: 16, fill: "#6b4424", stroke: "#3a2412", strokeWidth: 2 }));
+        counter.add(new Konva.Ellipse({ x: 360, y: 622, radiusX: 18, radiusY: 14, fill: "#8a5a2b", stroke: "#3a2412", strokeWidth: 2 }));
+        counter.add(imageIcon(images.sprout, 400, 618, 40));
+        counter.add(imageIcon(images.mine, 440, 622, 34));
+        counter.add(new Konva.Ellipse({ x: 620, y: 636, radiusX: 50, radiusY: 11, fill: "#8a5a2b", stroke: "#4a2c0a", strokeWidth: 2 }));
+        for (const [ex, ey] of [[594, 624], [620, 616], [646, 624], [608, 632], [634, 632]]) {
+            counter.add(eggIcon(ex, ey, 0.95));
         }
-        counter.add(new Konva.Rect({ x: 566, y: 636, width: 108, height: 14, cornerRadius: 4, fill: "#a0703c", stroke: "#4a2c0a", strokeWidth: 2 }));
+        counter.add(new Konva.Rect({ x: 560, y: 632, width: 120, height: 16, cornerRadius: 4, fill: "#a0703c", stroke: "#4a2c0a", strokeWidth: 2 }));
         this.group.add(counter);
     }
 
     private createWalletChip(x: number, label: string, icon: Konva.Group | Konva.Shape): Konva.Text {
-        const chip = new Konva.Group({ x, y: 104, listening: false });
-        chip.add(new Konva.Rect({ width: 120, height: 36, cornerRadius: 18, fill: "rgba(40, 22, 8, 0.78)", stroke: "#c9a66b", strokeWidth: 2 }));
-        chip.add(new Konva.Circle({ x: 20, y: 18, radius: 14, fill: "rgba(255, 243, 214, 0.18)" }));
+        const chip = new Konva.Group({ x, y: 102, listening: false });
+        chip.add(woodRect({ width: 120, height: 38, cornerRadius: 19, strokeWidth: 2 }));
+        chip.add(new Konva.Circle({ x: 20, y: 19, radius: 14, fill: "rgba(255, 243, 214, 0.18)" }));
         chip.add(icon);
         chip.add(new Konva.Text({ x: 40, y: 5, text: label, fontSize: 9, fontFamily: "Arial", fontStyle: "bold", letterSpacing: 1, fill: "#d9c28f" }));
-        const value = new Konva.Text({ x: 40, y: 15, width: 74, text: "0", fontSize: 17, fontFamily: "Arial", fontStyle: "bold", fill: "#fff3d6", wrap: "none", ellipsis: true });
+        const value = new Konva.Text({ x: 40, y: 16, width: 74, text: "0", fontSize: 17, fontFamily: "Arial", fontStyle: "bold", fill: "#fff3d6", wrap: "none", ellipsis: true });
         chip.add(value);
         this.group.add(chip);
         return value;
@@ -299,8 +488,8 @@ export class MorningEventsScreenView implements View {
     }
 
     private layoutGazetteCopy(): void {
-        const top = 44;
-        const bottom = GAZETTE.height - 12;
+        const top = 50;
+        const bottom = GAZETTE.height - 10;
         const gap = 6;
         const blockHeight = this.infoHeadline.height() + gap + this.infoText.height() + (this.infoFooter.text() ? gap + this.infoFooter.height() : 0);
         let y = top + Math.max(0, (bottom - top - blockHeight) / 2);
@@ -619,6 +808,13 @@ export class MorningEventsScreenView implements View {
             });
             const pulse = 1 + Math.sin(frame.time / 180) * 0.08;
             this.quizBadge.scale({ x: pulse, y: pulse });
+            const t = frame.time / 1000;
+            this.lanterns.forEach((lantern, i) => {
+                lantern.rotation(Math.sin(t * 1.4 + i * 0.9) * 7);
+            });
+            this.swingSigns.forEach((sign, i) => {
+                sign.rotation(-7 + Math.sin(t * 1.1 + i) * 5);
+            });
         }, layer);
         this.backgroundAnimation.start();
     }
