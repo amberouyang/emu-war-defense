@@ -9,7 +9,7 @@ import flagSrc from "../../../assets/flag.png";
 import chevronSrc from "../../../assets/chevron.png";
 import pauseSrc from "../../../assets/pause.png";
 import emuSrc from "../../../assets/Emu.png";
-import { INK, createModal, makeButton, makeRibbon } from "../../utils/uiKit.ts";
+import { GOLD, INK, createModal, makeButton, makeRibbon } from "../../utils/uiKit.ts";
 
 const createImage = (src: string): HTMLImageElement => {
 	if (typeof Image !== "undefined") {
@@ -276,6 +276,9 @@ export class FarmScreenView implements View {
 	private menuOverlay: Konva.Group;
 	private huntMenuOverlay: Konva.Group;
 	private eggMenuOverlay: Konva.Group;
+	private victoryOverlay: Konva.Group;
+	private victoryTitle!: Konva.Text;
+	private victoryBody!: Konva.Text;
 	private minesLayer: Konva.Group;
 	private defensesLayer: Konva.Group;
 	private mines: Konva.Image[] = [];
@@ -289,6 +292,7 @@ export class FarmScreenView implements View {
 	private huntSkipHandler: (() => void) | null = null;
 	private eggContinueHandler: (() => void) | null = null;
 	private eggSkipHandler: (() => void) | null = null;
+	private victoryContinueHandler: (() => void) | null = null;
 	private registerEmu: ((emu: FarmEmuController) => void) | null = null;
 	private removeEmus: (() => void) | null = null;
 	private timerText: Konva.Text;
@@ -602,6 +606,9 @@ export class FarmScreenView implements View {
 		);
 		this.group.add(this.eggMenuOverlay);
 
+		this.victoryOverlay = this.createVictoryOverlay();
+		this.group.add(this.victoryOverlay);
+
 		// Planters
 		for (const { x, y } of PLANTER_POSITIONS) {
 			const planter = new FarmPlanterController(this.group, x, y);
@@ -814,6 +821,54 @@ export class FarmScreenView implements View {
 		return popup;
 	}
 
+	private createVictoryOverlay(): Konva.Group {
+		const { popup, y } = createModal(460, 300);
+		popup.visible(false);
+		popup.add(makeRibbon(STAGE_WIDTH / 2, y - 24, 260, "VICTORY"));
+		popup.add(new Konva.Star({
+			x: STAGE_WIDTH / 2,
+			y: y + 58,
+			numPoints: 5,
+			innerRadius: 12,
+			outerRadius: 26,
+			fill: GOLD,
+			stroke: "#b8741a",
+			strokeWidth: 2,
+			listening: false,
+		}));
+		this.victoryTitle = new Konva.Text({
+			x: STAGE_WIDTH / 2 - 200,
+			y: y + 88,
+			width: 400,
+			text: "The farm held!",
+			fontSize: 28,
+			fontFamily: "Arial",
+			fontStyle: "bold",
+			fill: INK,
+			align: "center",
+			listening: false,
+		});
+		this.victoryBody = new Konva.Text({
+			x: STAGE_WIDTH / 2 - 190,
+			y: y + 128,
+			width: 380,
+			text: "",
+			fontSize: 16,
+			fontFamily: "Georgia",
+			fill: "#6d4c41",
+			align: "center",
+			lineHeight: 1.3,
+			listening: false,
+		});
+		popup.add(this.victoryTitle);
+		popup.add(this.victoryBody);
+		popup.add(makeButton(
+			{ x: STAGE_WIDTH / 2 - 140, y: y + 210, width: 280, height: 54, text: "CONTINUE", color: "#2fa84f", lip: "#1b6b31", fontSize: 22 },
+			() => this.victoryContinueHandler?.(),
+		));
+		return popup;
+	}
+
 	private createMinigameOverlay(
 		title: string,
 		description: string,
@@ -947,6 +1002,10 @@ export class FarmScreenView implements View {
 		this.eggContinueHandler = onCont;
 	}
 
+	setVictoryContinueHandler(onContinue: () => void): void {
+		this.victoryContinueHandler = onContinue;
+	}
+
 	showMenuOverlay(): void {
 		this.menuOverlay.moveToTop();
 		this.menuOverlay.visible(true);
@@ -980,8 +1039,29 @@ export class FarmScreenView implements View {
 		this.group.getLayer()?.draw();
 	}
 
+	showVictoryOverlay(day: number): void {
+		const firstDay = day <= 1;
+		this.victoryTitle.text(firstDay ? "First raid cleared!" : `Day ${day} cleared!`);
+		this.victoryBody.text(firstDay
+			? "The wheat is still standing. Nice work holding the farm on day 1."
+			: "Every emu is down. Head to the morning market when you are ready.");
+		this.huntMenuOverlay.visible(false);
+		this.eggMenuOverlay.visible(false);
+		this.raiseOverlay(this.victoryOverlay);
+	}
+
+	hideVictoryOverlay(): void {
+		this.victoryOverlay.visible(false);
+		this.group.getLayer()?.draw();
+	}
+
 	private presentMinigameOverlay(overlay: Konva.Group, other: Konva.Group): void {
 		other.visible(false);
+		this.victoryOverlay.visible(false);
+		this.raiseOverlay(overlay);
+	}
+
+	private raiseOverlay(overlay: Konva.Group): void {
 		overlay.visible(true);
 		const layer = this.group.getLayer();
 		if (layer) {
@@ -1163,6 +1243,7 @@ export class FarmScreenView implements View {
 	hide(): void {
 		this.group.visible(false);
 		this.ambientAnim?.stop();
+		this.hideVictoryOverlay();
 		this.group.getLayer()?.draw();
 	}
 

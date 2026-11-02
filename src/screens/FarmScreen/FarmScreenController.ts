@@ -49,6 +49,9 @@ export class FarmScreenController extends ScreenController {
 	private isPlanningPhase: boolean = false;
 	private isDefensePlacementMode: boolean = false;
 	private isGameOver: boolean = false;
+	private inRound: boolean = false;
+	private waveCleared: boolean = false;
+	private roundClosing: boolean = false;
 	private selectedDefenseType: DefenseType | null = null;
 	private readonly planningHint = "Place defenses, then press the green START button (top right).";
 
@@ -98,7 +101,8 @@ export class FarmScreenController extends ScreenController {
 		this.view.setEggMenuOptionHandlers(
 			() => this.handleSkipEgg(),
 			() => this.handleEggCont()
-		)
+		);
+		this.view.setVictoryContinueHandler(() => this.endRound());
 
 		requestAnimationFrame(this.gameLoop);
 	}
@@ -203,6 +207,9 @@ export class FarmScreenController extends ScreenController {
 	private showPlanningPhase(): void {
 		this.isPlanningPhase = true;
 		this.isDefensePlacementMode = false;
+		this.inRound = false;
+		this.waveCleared = false;
+		this.view.hideVictoryOverlay();
 		this.stopTimer();
 		this.refreshDefenseUpgradeLevels();
 		this.syncHudForUpcomingRound();
@@ -363,6 +370,10 @@ export class FarmScreenController extends ScreenController {
 		this.view.setPlacementCursor(false);
 		this.view.setPlacementHint();
 		this.planningPhase?.hide();
+		this.inRound = true;
+		this.waveCleared = false;
+		this.roundClosing = false;
+		this.view.hideVictoryOverlay();
 		this.view.updateScore(this.status.getFinalScore());
 		this.updateCropDisplay();
 		this.timeRemaining = GAME_DURATION;
@@ -441,7 +452,14 @@ export class FarmScreenController extends ScreenController {
 	 * End the game
 	 */
 	private endRound(): void {
+		if (this.roundClosing || this.isGameOver) {
+			return;
+		}
+		this.roundClosing = true;
+		this.inRound = false;
+		this.waveCleared = false;
         this.stopTimer();
+		this.view.hideVictoryOverlay();
         this.view.clearEmus();
         this.status.endDay();
 		this.status.incrementScore(10);
@@ -479,6 +497,22 @@ export class FarmScreenController extends ScreenController {
 	private handleEmuDefeated(emu: FarmEmuController): void {
 		this.emuTargets.delete(emu);
 		this.emus = this.emus.filter((candidate) => candidate !== emu);
+		this.updateRoundActionButtonState();
+		if (this.roundClosing || this.isGameOver || !this.hasActiveRound()) {
+			return;
+		}
+		if (this.getActiveEmuCount() === 0) {
+			this.clearWave();
+		}
+	}
+
+	private clearWave(): void {
+		if (this.waveCleared) {
+			return;
+		}
+		this.waveCleared = true;
+		this.stopTimer();
+		this.view.showVictoryOverlay(this.status.getDay());
 		this.updateRoundActionButtonState();
 	}
 
@@ -521,7 +555,7 @@ export class FarmScreenController extends ScreenController {
 	}
 
 	private hasActiveRound(): boolean {
-		return this.gameTimer !== null && !this.isPlanningPhase && !this.isDefensePlacementMode;
+		return this.inRound && !this.isPlanningPhase && !this.isDefensePlacementMode;
 	}
 
 	private checkForCropLoss(): void {
@@ -701,6 +735,10 @@ export class FarmScreenController extends ScreenController {
 
 	private handleMenuResume(): void {
 		this.view.hideMenuOverlay();
+		if (this.waveCleared) {
+			this.view.showVictoryOverlay(this.status.getDay());
+			return;
+		}
 		if (this.timeRemaining <= 0) {
 			this.endRound();
 			return;
@@ -1034,6 +1072,9 @@ export class FarmScreenController extends ScreenController {
 			return;
 		}
 		this.isGameOver = true;
+		this.inRound = false;
+		this.waveCleared = false;
+		this.view.hideVictoryOverlay();
 		this.stopTimer();
         this.view.clearEmus();
 		this.hidePlanningUi();

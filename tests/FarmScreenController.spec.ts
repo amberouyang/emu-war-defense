@@ -24,6 +24,9 @@ class FakeFarmScreenView {
   hideHuntMenuOverlay = vi.fn();
   showEggMenuOverlay = vi.fn();
   hideEggMenuOverlay = vi.fn();
+  setVictoryContinueHandler = vi.fn();
+  showVictoryOverlay = vi.fn();
+  hideVictoryOverlay = vi.fn();
   removeMineSprite = vi.fn();
   setDefensePlaceClickHandler = vi.fn();
   setPlanningPhaseMode = vi.fn();
@@ -267,12 +270,15 @@ describe("FarmScreenController", () => {
     } as unknown as FarmEmuController;
 
     (controller as any).registerEmu(emu);
+    (controller as any).inRound = true;
     (controller as any).isPlanningPhase = false;
     (controller as any).isDefensePlacementMode = false;
     (controller as any).gameTimer = 123;
 
     emu.remove();
 
+    expect(latestView?.showVictoryOverlay).toHaveBeenCalledWith(1);
+    expect((controller as any).gameTimer).toBeNull();
     expect(latestView?.setStartRoundButtonEnabled).toHaveBeenLastCalledWith(true);
     expect(latestView?.setStartRoundTooltip).toHaveBeenLastCalledWith(
       "All emus defeated. Click to skip to the next phase",
