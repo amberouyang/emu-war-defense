@@ -22,7 +22,7 @@ No install needed.
 
 ![Farm field: grassy crop plot with wooden HUD, dirt path, and a sandbag ready to place](docs/screenshots/farm-field.png)
 
-![Morning market stall with the gazette, wallet chips, and shop buttons](docs/screenshots/market.png)
+![Morning market stall with lanterns, a prices chalkboard, the gazette, and shop buttons](docs/screenshots/market.png)
 
 ![Egg raid intro: Night Raid controls and objectives](docs/screenshots/egg-raid-intro.png)
 
