@@ -182,7 +182,7 @@ export class FarmScreenController extends ScreenController {
 		this.view.updateTimer(this.timeRemaining);
 		this.updateCropDisplay();
 		this.view.show();
-		this.view.setPlacementHint();
+		this.view.setPlacementHint(this.combatHint());
 
 		// Show morning screen first, then planning phase
 		this.handleOpenMarket(() => this.prepareFirstRound());
@@ -198,10 +198,27 @@ export class FarmScreenController extends ScreenController {
 		this.model.updateSpawn();
 		this.resetMines();
 		this.updateCropDisplay();
-		
-		// Day 1 starts with no defenses so the first raid teaches the farm loop.
+
+		if (this.hasPlaceableDefenses()) {
+			this.showPlanningPhase();
+			return;
+		}
+
 		this.hidePlanningUi();
 		this.startRound();
+	}
+
+	private hasPlaceableDefenses(): boolean {
+		return this.status.getItemCount(GameItem.BarbedWire) > 0
+			|| this.status.getItemCount(GameItem.Sandbag) > 0
+			|| this.status.getItemCount(GameItem.MachineGun) > 0;
+	}
+
+	private combatHint(): string {
+		if (this.status.getItemCount(GameItem.Mine) > 0) {
+			return "Press M to drop a mine.";
+		}
+		return "Protect your crops.";
 	}
 
 	private showPlanningPhase(): void {
@@ -297,7 +314,7 @@ export class FarmScreenController extends ScreenController {
 				this.planningPhase.show();
 			}
 		} else {
-			this.view.setPlacementHint();
+			this.view.setPlacementHint(this.planningHint);
 		}
 	}
 
@@ -368,7 +385,7 @@ export class FarmScreenController extends ScreenController {
 		this.isDefensePlacementMode = false;
 		this.selectedDefenseType = null;
 		this.view.setPlacementCursor(false);
-		this.view.setPlacementHint();
+		this.view.setPlacementHint(this.combatHint());
 		this.planningPhase?.hide();
 		this.inRound = true;
 		this.waveCleared = false;
@@ -1092,7 +1109,7 @@ export class FarmScreenController extends ScreenController {
 		this.isDefensePlacementMode = false;
 		this.selectedDefenseType = null;
 		this.view.setPlacementCursor(false);
-		this.view.setPlacementHint();
+		this.view.setPlacementHint(this.combatHint());
 		this.planningPhase?.setPlacementMode(false);
 		this.planningPhase?.clearSelection();
 		this.planningPhase?.hide();

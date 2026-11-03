@@ -244,6 +244,29 @@ describe("FarmScreenController", () => {
     expect(reloadedStatus.getDefenseLevel("sandbag")).toBe(2);
   });
 
+  it("lets day 1 place shop defenses instead of auto starting", () => {
+    const { controller, status } = createController();
+    status.addToInventory("sandbag", 1);
+
+    (controller as any).prepareFirstRound();
+
+    expect(latestPlanningPhase?.show).toHaveBeenCalled();
+    expect(latestView?.spawnEmusMock).not.toHaveBeenCalled();
+    expect(latestView?.setPlacementHint).toHaveBeenCalledWith(
+      "Place defenses, then press the green START button (top right).",
+    );
+  });
+
+  it("skips day 1 planning and the place hint when nothing was bought", () => {
+    const { controller } = createController();
+
+    (controller as any).prepareFirstRound();
+
+    expect(latestView?.spawnEmusMock).toHaveBeenCalled();
+    const hintCalls = latestView?.setPlacementHint.mock.calls.map((call) => call[0] ?? "");
+    expect(hintCalls?.some((text) => String(text).includes("Place defenses"))).toBe(false);
+  });
+
   it("updates round and timer immediately when entering next planning phase", () => {
     const { controller, status } = createController();
 
