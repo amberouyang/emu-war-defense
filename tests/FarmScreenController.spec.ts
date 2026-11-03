@@ -244,6 +244,35 @@ describe("FarmScreenController", () => {
     expect(reloadedStatus.getDefenseLevel("sandbag")).toBe(2);
   });
 
+  it("freezes emus and combat while the pause menu is open", () => {
+    const { controller } = createController();
+    const setPaused = vi.fn();
+    const emu = {
+      setPaused,
+      isActive: vi.fn(() => true),
+      remove: vi.fn(),
+      getView: vi.fn(),
+      setSpeedModifier: vi.fn(),
+      setBlocked: vi.fn(),
+    } as unknown as FarmEmuController;
+
+    (controller as any).emus = [emu];
+    (controller as any).inRound = true;
+    (controller as any).gameTimer = 123;
+    (controller as any).handleMenuButton();
+
+    expect((controller as any).isPaused).toBe(true);
+    expect((controller as any).gameTimer).toBeNull();
+    expect(setPaused).toHaveBeenCalledWith(true);
+    expect(latestView?.showMenuOverlay).toHaveBeenCalled();
+
+    (controller as any).handleMenuResume();
+
+    expect((controller as any).isPaused).toBe(false);
+    expect(setPaused).toHaveBeenCalledWith(false);
+    expect(latestView?.hideMenuOverlay).toHaveBeenCalled();
+  });
+
   it("lets day 1 place shop defenses instead of auto starting", () => {
     const { controller, status } = createController();
     status.addToInventory("sandbag", 1);

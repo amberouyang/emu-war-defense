@@ -49,6 +49,7 @@ export class FarmScreenController extends ScreenController {
 	private isPlanningPhase: boolean = false;
 	private isDefensePlacementMode: boolean = false;
 	private isGameOver: boolean = false;
+	private isPaused: boolean = false;
 	private inRound: boolean = false;
 	private waveCleared: boolean = false;
 	private roundClosing: boolean = false;
@@ -113,6 +114,12 @@ export class FarmScreenController extends ScreenController {
 
 	private gameLoop = (timestamp: number): void => {
 		if (this.isGameOver) {
+			return;
+		}
+
+		if (this.isPaused) {
+			this.lastTickTime = timestamp;
+			requestAnimationFrame(this.gameLoop);
 			return;
 		}
 
@@ -384,6 +391,7 @@ export class FarmScreenController extends ScreenController {
 		}
 		this.isDefensePlacementMode = false;
 		this.selectedDefenseType = null;
+		this.isPaused = false;
 		this.view.setPlacementCursor(false);
 		this.view.setPlacementHint(this.combatHint());
 		this.planningPhase?.hide();
@@ -391,6 +399,7 @@ export class FarmScreenController extends ScreenController {
 		this.waveCleared = false;
 		this.roundClosing = false;
 		this.view.hideVictoryOverlay();
+		this.setEmusPaused(false);
 		this.view.updateScore(this.status.getFinalScore());
 		this.updateCropDisplay();
 		this.timeRemaining = GAME_DURATION;
@@ -419,6 +428,9 @@ export class FarmScreenController extends ScreenController {
 	 * Handle player movement
 	 */
     private handleKeydown(event: KeyboardEvent): void {
+		if (this.isPaused) {
+			return;
+		}
         const key = event.key;
         switch (key) {
             case "m": this.handleDeployMine(); break;
@@ -717,8 +729,23 @@ export class FarmScreenController extends ScreenController {
 
 
 	private handleMenuButton(): void {
+		this.pauseGame();
+	}
+
+	private pauseGame(): void {
+		if (this.isPaused || this.isGameOver) {
+			return;
+		}
+		this.isPaused = true;
 		this.stopTimer();
+		this.setEmusPaused(true);
 		this.view.showMenuOverlay();
+	}
+
+	private setEmusPaused(paused: boolean): void {
+		for (const emu of this.emus) {
+			emu.setPaused(paused);
+		}
 	}
 
 	//Handling options in the hunt menu:
@@ -746,12 +773,17 @@ export class FarmScreenController extends ScreenController {
 
 	private handleMenuSaveAndExit(): void {
         this.status.save();
+		this.isPaused = false;
+		this.setEmusPaused(false);
 		this.hidePlanningUi();
 		this.screenSwitcher.switchToScreen({ type: "main_menu" });
 	}
 
 	private handleMenuResume(): void {
 		this.view.hideMenuOverlay();
+		this.isPaused = false;
+		this.setEmusPaused(false);
+		this.lastTickTime = performance.now();
 		if (this.waveCleared) {
 			this.view.showVictoryOverlay(this.status.getDay());
 			return;
@@ -761,7 +793,9 @@ export class FarmScreenController extends ScreenController {
 			return;
 		}
 		this.view.updateTimer(this.timeRemaining);
-		this.startTimer();
+		if (this.hasActiveRound()) {
+			this.startTimer();
+		}
 	}
 
 	private handleOpenMarket(onClose?: () => void): void {

@@ -23,6 +23,7 @@ export class FarmEmuController {
 	private isBlocked: boolean = false;
 
 	private active: boolean;
+	private paused = false;
 
 	constructor(group: Konva.Group, startX: number, startY: number, onKill: () => void) {
 		this.model = new FarmEmuModel(() => onKill());
@@ -38,6 +39,12 @@ export class FarmEmuController {
 
 	private gameLoop = (timestamp: number): void => {
 		if (!this.active) {
+			return;
+		}
+
+		if (this.paused) {
+			this.lastTickTime = timestamp;
+			requestAnimationFrame(this.gameLoop);
 			return;
 		}
 
@@ -168,8 +175,15 @@ export class FarmEmuController {
 		return this.isBlocked;
 	}
 
+	setPaused(paused: boolean): void {
+		this.paused = paused;
+		if (!paused) {
+			this.lastTickTime = null;
+		}
+	}
+
 	private handleClickDamage(): void {
-		if (!this.active) {
+		if (!this.active || this.paused) {
 			return;
 		}
 		this.view.showBloodSplatter();
