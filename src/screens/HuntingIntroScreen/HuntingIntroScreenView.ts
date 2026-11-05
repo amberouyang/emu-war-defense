@@ -2,6 +2,7 @@ import Konva from "konva";
 import type { View } from "../../types";
 import { STAGE_WIDTH, STAGE_HEIGHT } from "../../constants";
 import { GOLD, INK, PARCHMENT, makeButton, makeRibbon, woodRect } from "../../utils/uiKit.ts";
+import { HUNT_AMMO, HUNT_DURATION } from "../HuntingScreen/HuntingScreenModel";
 import backgroundSrc from "../../../assets/background.png";
 import emuSrc from "../../../assets/Emu.png";
 
@@ -47,7 +48,7 @@ export class HuntingIntroScreenView implements View {
       x,
       y: y + 122,
       width: panelWidth,
-      text: "A mob is nesting in the scrub. Hunt them down before they scatter.",
+      text: "A mob is nesting in the scrub. Clear every emu before time or ammo runs out.",
       fontSize: 16,
       fontFamily: "Georgia",
       fill: INK,
@@ -55,11 +56,12 @@ export class HuntingIntroScreenView implements View {
       listening: false,
     }));
 
+    const durationLabel = `${Math.floor(HUNT_DURATION / 60)}:${(HUNT_DURATION % 60).toString().padStart(2, "0")}`;
     const rows: [string, string][] = [
       ["WASD / ARROWS", "Move in eight directions"],
       ["SPACE", "Shoot. Each emu takes 3 hits"],
       ["ROCKS & BUSHES", "Block your path and your shots"],
-      ["1:00  /  100 AMMO", "Clear the nest before either runs out"],
+      [`${durationLabel}  /  ${HUNT_AMMO} AMMO`, "Clear the nest before either runs out"],
     ];
     rows.forEach(([key, desc], i) => {
       const rowY = y + 168 + i * 48;

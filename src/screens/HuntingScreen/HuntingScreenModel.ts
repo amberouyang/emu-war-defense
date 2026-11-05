@@ -1,15 +1,17 @@
-// src/screens/Game1Screen/Game2ScreenModel.ts
+export const HUNT_DURATION = 40;
+export const HUNT_AMMO = 100;
+
 export class HuntingScreenModel {
   private defeat = 0;
-  private timeRemaining = 60; // 1 minute in seconds
+  private timeRemaining = HUNT_DURATION;
   private startTime: number = 0;
-  private ammo = 100; // Starting ammo count
+  private ammo = HUNT_AMMO;
 
   reset(): void {
     this.defeat = 0;
-    this.timeRemaining = 60;
+    this.timeRemaining = HUNT_DURATION;
     this.startTime = 0;
-    this.ammo = 100;
+    this.ammo = HUNT_AMMO;
   }
 
   incrementDefeat(): void {
@@ -46,9 +48,9 @@ export class HuntingScreenModel {
 
   updateTimer(): number {
     if (this.startTime === 0) return this.timeRemaining;
-    
-    const elapsed = (Date.now() - this.startTime) / 1000; // elapsed time in seconds
-    this.timeRemaining = Math.max(0, 60 - elapsed);
+
+    const elapsed = (Date.now() - this.startTime) / 1000;
+    this.timeRemaining = Math.max(0, HUNT_DURATION - elapsed);
     return this.timeRemaining;
   }
 
@@ -58,10 +60,10 @@ export class HuntingScreenModel {
   }
 
   resumeTimer(): void {
-    const elapsed = Math.max(0, 60 - this.timeRemaining);
+    const elapsed = Math.max(0, HUNT_DURATION - this.timeRemaining);
     this.startTime = Date.now() - elapsed * 1000;
   }
-  
+
   stopTimer(): void {
     this.startTime = 0;
   }

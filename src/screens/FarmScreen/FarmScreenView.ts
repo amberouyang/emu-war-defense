@@ -601,7 +601,7 @@ export class FarmScreenView implements View {
 
 		this.huntMenuOverlay = this.createMinigameOverlay(
 			"EMU HUNT",
-			"A mob of emus is out in the open. Head into the bush and hunt them down for points.",
+			"A mob of emus is out in the open. Head into the bush, shoot them down, and clear the nest for points.",
 			"hunt",
 			() => this.huntContinueHandler?.(),
 			() => this.huntSkipHandler?.()

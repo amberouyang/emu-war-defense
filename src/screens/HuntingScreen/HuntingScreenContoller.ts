@@ -1,7 +1,7 @@
 // src/screens/Game2Screen/Game2ScreenController.ts
 import { ScreenController } from "../../types";
 import type { ScreenSwitcher } from "../../types";
-import { HuntingScreenModel } from "./HuntingScreenModel";
+import { HUNT_DURATION, HuntingScreenModel } from "./HuntingScreenModel";
 import { HuntingScreenView } from "./HuntingScreenView";
 import { PlayerController } from "../../components/Player/PlayerController";
 import { ObstacleController } from "../../components/Obstacle/ObstacleController";
@@ -18,6 +18,7 @@ export class HuntingScreenController extends ScreenController {
   private screenSwitcher: ScreenSwitcher;
   private running = false;
   private paused = false;
+  private countingDown = false;
   private audioManager : AudioManager;
   private status: GameStatusController ;
 
@@ -49,14 +50,15 @@ export class HuntingScreenController extends ScreenController {
 
   startHuntingGame() {
     this.resetGame();
-    this.model.startTimer();
     this.view.updateAmmo(this.model.getAmmo());
     this.view.updateDefeat(this.emuControllers.length);
     this.view.updateTimer(this.model.getTimeRemaining());
     this.view.hidePauseOverlay();
     this.view.show();
-    this.running = true;
+    this.running = false;
     this.paused = false;
+    this.countingDown = true;
+    this.keys.clear();
 
     // attach keyboard
     this.onKeyDown = this.onKeyDown.bind(this);
@@ -64,7 +66,25 @@ export class HuntingScreenController extends ScreenController {
     window.addEventListener("keydown", this.onKeyDown);
     window.addEventListener("keyup", this.onKeyUp);
 
+    this.view.showStartCountdown(HUNT_DURATION, () => this.beginHuntAfterCountdown());
+  }
+
+  private beginHuntAfterCountdown(): void {
+    if (!this.countingDown) {
+      return;
+    }
+    this.countingDown = false;
+    this.running = true;
+    this.paused = false;
+    this.model.startTimer();
+    this.audioManager.playSfx("run", 0.45);
     this.gameLoop();
+  }
+
+  override hide(): void {
+    this.countingDown = false;
+    this.view.hideStartCountdown();
+    super.hide();
   }
 
   private cleanup(){
@@ -125,6 +145,9 @@ export class HuntingScreenController extends ScreenController {
     if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " ", "Space", "Escape"].includes(e.key) || e.code === "Space") {
       e.preventDefault();
     }
+    if (this.countingDown) {
+      return;
+    }
     if (e.key === "Escape") {
       if (this.paused) {
         this.resumeHunt();
@@ -154,7 +177,7 @@ export class HuntingScreenController extends ScreenController {
   }
 
   private pauseHunt(): void {
-    if (!this.running || this.paused) {
+    if (!this.running || this.paused || this.countingDown) {
       return;
     }
     this.paused = true;
@@ -177,8 +200,10 @@ export class HuntingScreenController extends ScreenController {
   private leaveHunt(): void {
     this.paused = false;
     this.running = false;
+    this.countingDown = false;
     this.keys.clear();
     this.model.stopTimer();
+    this.view.hideStartCountdown();
     this.playerController?.stopAllSounds();
     window.removeEventListener("keydown", this.onKeyDown);
     window.removeEventListener("keyup", this.onKeyUp);
@@ -251,8 +276,10 @@ export class HuntingScreenController extends ScreenController {
   endGame(reason: "ammo" | "time" | "victory" = "victory") {
     this.running = false;
     this.paused = false;
+    this.countingDown = false;
     this.keys.clear();
     this.model.stopTimer();
+    this.view.hideStartCountdown();
     if (this.playerController) {
       this.playerController.stopAllSounds();
     }

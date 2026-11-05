@@ -32,6 +32,8 @@ const mockView = {
   setPauseHandlers: vi.fn(),
   showPauseOverlay: vi.fn(),
   hidePauseOverlay: vi.fn(),
+  showStartCountdown: vi.fn((_seconds: number, onComplete: () => void) => onComplete()),
+  hideStartCountdown: vi.fn(),
 };
 
 // Mock Model
@@ -43,7 +45,7 @@ const mockModel = {
   getAmmo: vi.fn(() => 100),
   canShoot: vi.fn(() => true),
   consumeAmmo: vi.fn(() => true),
-  getTimeRemaining: vi.fn(() => 60),
+  getTimeRemaining: vi.fn(() => 40),
   getDefeat: vi.fn(() => 0),
   isTimeUp: vi.fn(() => false),
   incrementDefeat: vi.fn(),
@@ -80,6 +82,8 @@ vi.mock('../src/screens/HuntingScreen/HuntingScreenView', () => ({
 }));
 
 vi.mock('../src/screens/HuntingScreen/HuntingScreenModel', () => ({
+  HUNT_DURATION: 40,
+  HUNT_AMMO: 100,
   HuntingScreenModel: vi.fn(() => mockModel),
 }));
 
@@ -164,7 +168,7 @@ describe('HuntingScreenController', () => {
     it('should update initial view state', () => {
       expect(mockView.updateAmmo).toHaveBeenCalledWith(100);
       expect(mockView.updateDefeat).toHaveBeenCalledWith(1); // mockEmuController count
-      expect(mockView.updateTimer).toHaveBeenCalledWith(60);
+      expect(mockView.updateTimer).toHaveBeenCalledWith(40);
     });
 
     it('should attach keyboard listeners', () => {
@@ -272,7 +276,7 @@ describe('HuntingScreenController', () => {
       (controller as any).gameLoop();
       
       expect(mockModel.updateTimer).toHaveBeenCalled();
-      expect(mockView.updateTimer).toHaveBeenCalledWith(60);
+      expect(mockView.updateTimer).toHaveBeenCalledWith(40);
       expect(mockView.updateAmmo).toHaveBeenCalledWith(100);
       expect(mockPlayerController.update).toHaveBeenCalled();
       expect(mockEmuController.update).toHaveBeenCalled();

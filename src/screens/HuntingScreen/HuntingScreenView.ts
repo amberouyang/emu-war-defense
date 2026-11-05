@@ -1,7 +1,8 @@
 import Konva from "konva";
 import { STAGE_WIDTH, STAGE_HEIGHT, HUD_HEIGHT } from "../../constants";
-import { INK, createModal, makeButton, makeRibbon } from "../../utils/uiKit.ts";
+import { GOLD, INK, createModal, makeButton, makeRibbon } from "../../utils/uiKit.ts";
 import pauseSrc from "../../../assets/pause.png";
+import { HUNT_DURATION } from "./HuntingScreenModel";
 const WOOD_STOPS = [0, "#80502a", 1, "#55331a"];
 const CREAM = "#fff3d6";
 
@@ -114,6 +115,10 @@ export class HuntingScreenView {
 	private timerText: Konva.Text;
 	private timerBarFill: Konva.Rect;
 	private pauseOverlay: Konva.Group;
+	private countdownOverlay: Konva.Group;
+	private countdownLabel!: Konva.Text;
+	private countdownHint!: Konva.Text;
+	private countdownToken = 0;
 	private onPause: (() => void) | null = null;
 	private onResume: (() => void) | null = null;
 	private onLeave: (() => void) | null = null;
@@ -169,7 +174,7 @@ export class HuntingScreenView {
 			x: 34,
 			y: 8,
 			width: 52,
-			text: "01:00",
+			text: this.formatTime(HUNT_DURATION),
 			fontSize: 18,
 			fontFamily: "Arial",
 			fontStyle: "bold",
@@ -186,7 +191,7 @@ export class HuntingScreenView {
 			x: 16,
 			y: 56,
 			width: 520,
-			text: "WASD or arrows, including diagonals.  SPACE to shoot.  Esc to pause.",
+			text: "WASD or arrows to move. SPACE to shoot. Clear every emu. Esc to pause.",
 			fontSize: 12,
 			fontFamily: "Arial",
 			fontStyle: "bold",
@@ -199,6 +204,118 @@ export class HuntingScreenView {
 
 		this.pauseOverlay = this.createPauseOverlay();
 		this.group.add(this.pauseOverlay);
+		this.countdownOverlay = this.createCountdownOverlay();
+		this.group.add(this.countdownOverlay);
+	}
+
+	private formatTime(secondsRemaining: number): string {
+		const minutes = Math.floor(secondsRemaining / 60);
+		const seconds = Math.floor(secondsRemaining % 60);
+		return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+	}
+
+	private createCountdownOverlay(): Konva.Group {
+		const overlay = new Konva.Group({ visible: false, listening: false });
+		overlay.add(new Konva.Rect({
+			width: STAGE_WIDTH,
+			height: STAGE_HEIGHT,
+			fill: "rgba(10, 20, 8, 0.55)",
+		}));
+		this.countdownHint = new Konva.Text({
+			y: STAGE_HEIGHT / 2 - 110,
+			width: STAGE_WIDTH,
+			text: "",
+			fontSize: 22,
+			fontFamily: "Arial",
+			fontStyle: "bold",
+			fill: "#f2c14e",
+			align: "center",
+			shadowColor: "#000",
+			shadowBlur: 8,
+			shadowOpacity: 0.8,
+		});
+		this.countdownLabel = new Konva.Text({
+			x: STAGE_WIDTH / 2,
+			y: STAGE_HEIGHT / 2,
+			text: "3",
+			fontSize: 110,
+			fontFamily: "Arial Black, Arial",
+			fill: GOLD,
+			stroke: "#4a2608",
+			strokeWidth: 6,
+			align: "center",
+			shadowColor: "#000",
+			shadowBlur: 12,
+			shadowOpacity: 0.85,
+		});
+		this.countdownLabel.offsetX(this.countdownLabel.width() / 2);
+		this.countdownLabel.offsetY(this.countdownLabel.height() / 2);
+		overlay.add(this.countdownHint);
+		overlay.add(this.countdownLabel);
+		return overlay;
+	}
+
+	showStartCountdown(seconds: number, onComplete: () => void): void {
+		const token = ++this.countdownToken;
+		const steps = [`${seconds}s`, "3", "2", "1", "GO!"];
+		this.countdownHint.text(`You have ${seconds} seconds. Shoot every emu before time runs out!`);
+		this.countdownOverlay.visible(true);
+		this.countdownOverlay.moveToTop();
+		this.playCountdownStep(steps, 0, token, onComplete);
+	}
+
+	hideStartCountdown(): void {
+		this.countdownToken++;
+		this.countdownOverlay.visible(false);
+		this.countdownLabel.scale({ x: 1, y: 1 });
+		this.countdownLabel.opacity(1);
+		this.group.getLayer()?.batchDraw();
+	}
+
+	private playCountdownStep(steps: string[], index: number, token: number, onComplete: () => void): void {
+		if (token !== this.countdownToken) {
+			return;
+		}
+		if (index >= steps.length) {
+			this.hideStartCountdown();
+			onComplete();
+			return;
+		}
+
+		const text = steps[index];
+		const isGo = text === "GO!";
+		const isWarning = index === 0;
+		this.countdownHint.visible(!isGo);
+		this.countdownLabel.text(text);
+		this.countdownLabel.fontSize(isGo ? 96 : isWarning ? 88 : 110);
+		this.countdownLabel.fill(isGo ? "#58d36a" : isWarning ? "#f2c14e" : GOLD);
+		this.countdownLabel.offsetX(this.countdownLabel.width() / 2);
+		this.countdownLabel.offsetY(this.countdownLabel.height() / 2);
+		this.countdownLabel.scale({ x: 0.35, y: 0.35 });
+		this.countdownLabel.opacity(1);
+		this.countdownOverlay.visible(true);
+		this.countdownOverlay.moveToTop();
+		this.group.getLayer()?.batchDraw();
+
+		this.countdownLabel.to({
+			scaleX: 1.08,
+			scaleY: 1.08,
+			duration: 0.28,
+			easing: Konva.Easings.BackEaseOut,
+			onFinish: () => {
+				if (token !== this.countdownToken) {
+					return;
+				}
+				this.countdownLabel.to({
+					scaleX: 1,
+					scaleY: 1,
+					opacity: 0,
+					duration: isWarning ? 0.55 : 0.4,
+					easing: Konva.Easings.EaseIn,
+					onFinish: () => this.playCountdownStep(steps, index + 1, token, onComplete),
+				});
+			},
+		});
 	}
 
 	private addPauseButton(): void {
@@ -282,6 +399,7 @@ export class HuntingScreenView {
 	hide() {
 		this.group.visible(false);
 		this.pauseOverlay.visible(false);
+		this.hideStartCountdown();
 		this.group.getLayer()?.draw();
 	}
 
@@ -296,12 +414,9 @@ export class HuntingScreenView {
 		this.group.getLayer()?.draw();
 	}
 
-	updateTimer(secondsRemaining: number) {
-		const minutes = Math.floor(secondsRemaining / 60);
-		const seconds = Math.floor(secondsRemaining % 60);
-		const secondsStr = seconds.toString().padStart(2, "0");
-		this.timerText.text(`${minutes.toString().padStart(2, "0")}:${secondsStr}`);
-		const ratio = Math.max(0, Math.min(1, secondsRemaining / 60));
+	updateTimer(secondsRemaining: number, maxTime: number = HUNT_DURATION) {
+		this.timerText.text(this.formatTime(secondsRemaining));
+		const ratio = Math.max(0, Math.min(1, secondsRemaining / Math.max(1, maxTime)));
 		this.timerBarFill.width(90 * ratio);
 		this.timerBarFill.visible(ratio > 0);
 		this.timerBarFill.fill(ratio > 0.34 ? "#58d36a" : ratio > 0.17 ? "#f2c14e" : "#ff5a4a");

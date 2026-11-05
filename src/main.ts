@@ -76,15 +76,17 @@ class App implements ScreenSwitcher {
 		this.menuController.show();
 		this.audioManager.playBgm("menu");
 
-		// Local vite only: jump into egg raid for quick testing.
+		// Local vite only: jump into the hunt for quick testing.
 		// Production builds (push / GitHub Pages) ignore this and stay on the menu.
-		// Override locally with ?screen=menu or ?screen=intro
+		// Override locally with ?screen=menu, ?screen=raid, or ?screen=intro
 		const params = new URLSearchParams(window.location.search);
 		let startScreen = params.get("screen");
 		if (!startScreen && import.meta.env.DEV) {
-			startScreen = "raid";
+			startScreen = "hunt";
 		}
-		if (startScreen === "raid") {
+		if (startScreen === "hunt") {
+			this.switchToScreen({ type: "minigame2_intro" });
+		} else if (startScreen === "raid") {
 			this.switchToScreen({ type: "minigame1_raid" });
 		} else if (startScreen === "intro") {
 			this.switchToScreen({ type: "game_intro" });
