@@ -7,6 +7,7 @@ export class GameIntroController {
   private view: GameIntroView;
   private screenSwitcher: ScreenSwitcher;
   private currentPage: number = 0;
+  private showingCombatTip = false;
   private keydownHandler: ((e: KeyboardEvent) => void) | null = null;
 
   constructor(screenSwitcher: ScreenSwitcher) {
@@ -14,7 +15,7 @@ export class GameIntroController {
     this.view = new GameIntroView(
       () => this.nextPage(),
       () => this.previousPage(),
-      () => this.completeIntro(),
+      () => this.openCombatTip(),
     );
     this.screenSwitcher = screenSwitcher;
 
@@ -25,6 +26,7 @@ export class GameIntroController {
 
   show(): void {
     this.currentPage = 0;
+    this.showingCombatTip = false;
     this.renderCurrentPage();
     this.setupInput();
     this.view.show();
@@ -52,15 +54,23 @@ export class GameIntroController {
   }
 
   private nextPage(): void {
+    if (this.showingCombatTip) {
+      this.completeIntro();
+      return;
+    }
     if (this.currentPage < this.model.getPageCount() - 1) {
       this.currentPage++;
       this.renderCurrentPage();
     } else {
-      this.completeIntro();
+      this.openCombatTip();
     }
   }
 
   private previousPage(): void {
+    if (this.showingCombatTip) {
+      this.backFromCombatTip();
+      return;
+    }
     if (this.currentPage === 0) return;
     this.currentPage--;
     this.renderCurrentPage();
@@ -76,7 +86,11 @@ export class GameIntroController {
       switch (e.code) {
         case "Escape":
           e.preventDefault();
-          this.completeIntro();
+          if (this.showingCombatTip) {
+            this.completeIntro();
+          } else {
+            this.openCombatTip();
+          }
           break;
         case "Space":
         case "Enter":
@@ -95,7 +109,22 @@ export class GameIntroController {
     window.addEventListener("keydown", this.keydownHandler);
   }
 
+  private openCombatTip(): void {
+    this.showingCombatTip = true;
+    this.view.showCombatTip(
+      () => this.completeIntro(),
+      () => this.backFromCombatTip(),
+    );
+  }
+
+  private backFromCombatTip(): void {
+    this.showingCombatTip = false;
+    this.currentPage = this.model.getPageCount() - 1;
+    this.renderCurrentPage();
+  }
+
   private completeIntro(): void {
+    this.showingCombatTip = false;
     this.screenSwitcher.switchToScreen({ type: "farm", newgame: true });
   }
 

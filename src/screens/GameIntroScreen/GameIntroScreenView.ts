@@ -332,6 +332,139 @@ export class GameIntroView {
 		this.group.getLayer()?.batchDraw();
 	}
 
+	showCombatTip(onContinue: () => void, onBack: () => void): void {
+		this.stopTyping();
+		this.group.destroyChildren();
+		this.motes = [];
+
+		this.drawBackdrop();
+
+		const card = {
+			x: 110,
+			y: 110,
+			width: STAGE_WIDTH - 220,
+			height: STAGE_HEIGHT - 220,
+		};
+		this.group.add(new Konva.Rect({
+			x: card.x + 8,
+			y: card.y + 12,
+			width: card.width,
+			height: card.height,
+			fill: "rgba(0, 0, 0, 0.35)",
+			cornerRadius: 28,
+			listening: false,
+		}));
+		this.group.add(new Konva.Rect({
+			...card,
+			fillLinearGradientStartPoint: { x: 0, y: 0 },
+			fillLinearGradientEndPoint: { x: 0, y: card.height },
+			fillLinearGradientColorStops: [0, COLORS.paperTop, 1, COLORS.paperBottom],
+			stroke: "#6c5330",
+			strokeWidth: 3,
+			cornerRadius: 28,
+		}));
+
+		this.group.add(new Konva.Rect({
+			x: STAGE_WIDTH / 2 - 110,
+			y: card.y - 18,
+			width: 220,
+			height: 40,
+			cornerRadius: 10,
+			fill: COLORS.accent,
+			stroke: "#5a1a10",
+			strokeWidth: 2,
+			listening: false,
+		}));
+		this.group.add(new Konva.Text({
+			x: STAGE_WIDTH / 2 - 110,
+			y: card.y - 8,
+			width: 220,
+			text: "QUICK TIP",
+			fontSize: 18,
+			fontFamily: DISPLAY,
+			fontStyle: "bold",
+			letterSpacing: 2,
+			fill: "#fff6df",
+			align: "center",
+			listening: false,
+		}));
+
+		this.group.add(new Konva.Text({
+			x: card.x + 40,
+			y: card.y + 48,
+			width: card.width - 80,
+			text: "CLICK OR TAP THE EMUS",
+			fontSize: 34,
+			fontFamily: SERIF,
+			fontStyle: "bold",
+			fill: COLORS.ink,
+			align: "center",
+			listening: false,
+		}));
+
+		const art = new Konva.Group({ x: STAGE_WIDTH / 2, y: card.y + 210, listening: false });
+		art.add(new Konva.Ellipse({ y: 54, radiusX: 70, radiusY: 16, fill: "rgba(60, 35, 10, 0.25)" }));
+		art.add(fittedImage(emuSrc, 0, 50, 150, 150));
+		art.add(new Konva.Circle({
+			x: 70,
+			y: -36,
+			radius: 34,
+			fill: "white",
+			stroke: COLORS.accent,
+			strokeWidth: 4,
+		}));
+		art.add(new Konva.Text({
+			x: 46,
+			y: -44,
+			width: 48,
+			text: "TAP",
+			fontSize: 16,
+			fontFamily: DISPLAY,
+			fontStyle: "bold",
+			fill: COLORS.accent,
+			align: "center",
+		}));
+		this.group.add(art);
+
+		this.group.add(new Konva.Text({
+			x: card.x + 50,
+			y: card.y + 290,
+			width: card.width - 100,
+			text: "During a raid, click or tap an emu to hurt it. Keep clicking until it falls. That is how you protect the wheat on day 1.",
+			fontSize: 18,
+			fontFamily: SERIF,
+			fill: COLORS.body,
+			align: "center",
+			lineHeight: 1.35,
+			listening: false,
+		}));
+
+		this.group.add(this.createButton(
+			STAGE_WIDTH / 2 - 250,
+			card.y + card.height - 78,
+			140,
+			52,
+			"BACK",
+			"#8a7556",
+			"#5a4a33",
+			onBack,
+			"left",
+		).group);
+		this.group.add(this.createButton(
+			STAGE_WIDTH / 2 - 40,
+			card.y + card.height - 78,
+			220,
+			52,
+			"TO THE FARM",
+			"#3f9b3a",
+			"#24601f",
+			onContinue,
+			"right",
+		).group);
+
+		this.group.getLayer()?.batchDraw();
+	}
+
 	destroy(): void {
 		this.stopTyping();
 		this.animation?.stop();
