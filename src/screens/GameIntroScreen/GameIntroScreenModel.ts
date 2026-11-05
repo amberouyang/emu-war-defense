@@ -1,3 +1,4 @@
+import { CROP_WIN_GOAL } from "../../constants.ts";
 
 export class GameIntroModel {
   private pages: string[] = [
@@ -7,8 +8,8 @@ export class GameIntroModel {
     "MILITARY INTERVENTION\n\n\nDesperate farmers asked the government for help.\n\nIn October 1932, the Australian military deployed soldiers with machine guns to combat the emus.",
     "THE EMUS FIGHT BACK\n\n\nThe emus proved to be surprisingly effective opponents!\n\nThey could run at 30 mph, scattered when shot at, and worked in groups. The soldiers found them nearly impossible to hit.",
     "AN EMBARRASSING DEFEAT\n\n\nAfter weeks of failed attempts, the military withdrew.\n\nThe emus had won! This became known as 'The Great Emu War', one of the few wars Australia officially lost.",
-    "YOUR MISSION\n\n\nNow it's your turn to defend your farm!\n\nGrow crops, protect them from emu raids, and survive where the military failed.\n\nCan you succeed where history did not?",
-    "CONTROLS & HOW TO PLAY\n\n\nClick an empty planter to plant wheat. Crops grow each day, so click them once they're fully grown to harvest.\n\nBefore each round, pick a defense and press T to place it at your cursor. Press M to deploy a mine.\n\nKeep your crops alive until the timer runs out!"
+    `YOUR MISSION\n\n\nNow it's your turn to defend the farm.\n\nPlant wheat, protect it from emu raids, and harvest ${CROP_WIN_GOAL} crops to keep the settlement going.\n\nHit that harvest goal to win.`,
+    `CONTROLS & HOW TO PLAY\n\n\nClick an empty planter to plant wheat. Click fully grown crops to harvest them.\n\nBefore a raid, pick a defense and press T to place it. Press M to drop a mine.\n\nTrack your harvest in the crop counter at the top. The right number is your progress toward ${CROP_WIN_GOAL}. Keep at least one crop alive!`
   ];
 
   getPage(index: number): string {

@@ -16,14 +16,26 @@ export type LeaderboardEntry = {
 export class GameOverScreenModel {
 	private survivalDays = 0;
 	private finalScore = 0;
+	private won = false;
+	private cropsHarvested = 0;
 	private leaderboard: LeaderboardEntry[] = [];
 
 	/**
 	 * Set the final results
 	 */
-	setFinalResults(survivalDays: number, score: number): void {
+	setFinalResults(survivalDays: number, score: number, won: boolean = false, cropsHarvested: number = 0): void {
 		this.survivalDays = survivalDays;
 		this.finalScore = score;
+		this.won = won;
+		this.cropsHarvested = cropsHarvested;
+	}
+
+	didWin(): boolean {
+		return this.won;
+	}
+
+	getCropsHarvested(): number {
+		return this.cropsHarvested;
 	}
 
 	/**

@@ -15,6 +15,7 @@ type PersistedState = {
     emuCount: number;
     score: number;
     defenseLevels: DefenseLevels;
+    cropsHarvested: number;
 };
 
 const STORAGE_KEY = "game:status";
@@ -29,6 +30,7 @@ export class GameStatusController {
     private inventory!: Inventory;
     private score!: number;
     private defenseLevels!: DefenseLevels;
+    private cropsHarvested!: number;
 
     constructor() {
         const saved = this.load();
@@ -38,6 +40,7 @@ export class GameStatusController {
             this.emuCount = saved.emuCount;
             this.score = saved.score;
             this.defenseLevels = saved.defenseLevels;
+            this.cropsHarvested = saved.cropsHarvested;
         } else {
             this.reset(false);
         }
@@ -51,6 +54,7 @@ export class GameStatusController {
             emuCount: this.emuCount,
             score: this.score,
             defenseLevels: this.defenseLevels,
+            cropsHarvested: this.cropsHarvested,
         };
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch {}
     }
@@ -66,6 +70,7 @@ export class GameStatusController {
                 emuCount: parsed.emuCount ?? STARTING_EMU_COUNT,
                 score: parsed.score ?? 0,
                 defenseLevels: this.normalizeDefenseLevels(parsed.defenseLevels),
+                cropsHarvested: Math.max(0, parsed.cropsHarvested ?? 0),
             };
         } catch {
             return null;
@@ -150,6 +155,21 @@ export class GameStatusController {
         this.save();
     }
 
+    /**
+     * Lifetime crops harvested this run (selling/replanting do not reduce this).
+     */
+    getCropsHarvested(): number {
+        return this.cropsHarvested;
+    }
+
+    recordCropHarvest(amount: number = 1): void {
+        if (amount <= 0) {
+            return;
+        }
+        this.cropsHarvested += amount;
+        this.save();
+    }
+
     hasSavedGame(): boolean {
         try {
             return localStorage.getItem(STORAGE_KEY) !== null;
@@ -230,6 +250,7 @@ export class GameStatusController {
     reset(save: boolean = true): void {
 		this.day = 1;
         this.score = 0;
+        this.cropsHarvested = 0;
 		this.inventory = this.normalizeInventory();
         this.defenseLevels = this.normalizeDefenseLevels();
 		this.emuCount = STARTING_EMU_COUNT;

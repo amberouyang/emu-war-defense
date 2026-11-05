@@ -22,7 +22,7 @@ export type Screen =
 	| { type: "minigame2" }
 	| { type: "minigame2_end"; emusKilled: number; reason: "ammo" | "time" | "victory" }
 	| { type: "morning" }
-	| { type: "game_over"; survivalDays:number; score: number }
+	| { type: "game_over"; survivalDays: number; score: number; won?: boolean; cropsHarvested?: number }
 	| { type: "minigame1_raid" };
 
 export abstract class ScreenController {

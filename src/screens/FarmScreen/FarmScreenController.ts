@@ -5,7 +5,7 @@ import { DefenseController } from "../../components/DefenseComponent/DefenseCont
 import type { DefenseType } from "../../components/DefenseComponent/DefenseModel.ts";
 import { FarmEmuController } from "../../components/FarmEmuComponent/FarmEmuController.ts";
 import type { FarmPlanterController } from "../../components/FarmPlanterComponent/FarmPlanterController.ts";
-import { GAME_DURATION, GameItem } from "../../constants.ts";
+import { CROP_WIN_GOAL, GAME_DURATION, GameItem } from "../../constants.ts";
 import { GameStatusController } from "../../controllers/GameStatusController.ts";
 import { AudioManager } from "../../services/AudioManager.ts";
 import type { ScreenSwitcher } from "../../types.ts";
@@ -231,10 +231,11 @@ export class FarmScreenController extends ScreenController {
 	}
 
 	private combatHint(): string {
+		const progress = `Harvest ${this.status.getCropsHarvested()}/${CROP_WIN_GOAL} to win.`;
 		if (this.status.getItemCount(GameItem.Mine) > 0) {
-			return "Press M to drop a mine.";
+			return `${progress} Press M to drop a mine.`;
 		}
-		return "Protect your crops.";
+		return `${progress} Protect your crops.`;
 	}
 
 	private showPlanningPhase(): void {
@@ -470,7 +471,13 @@ export class FarmScreenController extends ScreenController {
 		// End game button - trigger game over
 		this.stopTimer();
 		this.hidePlanningUi();
-		this.screenSwitcher.switchToScreen({ type: "game_over",survivalDays:this.status.getSurvivalDay() ,score: this.status.getFinalScore() });
+		this.screenSwitcher.switchToScreen({
+			type: "game_over",
+			survivalDays: this.status.getSurvivalDay(),
+			score: this.status.getFinalScore(),
+			won: false,
+			cropsHarvested: this.status.getCropsHarvested(),
+		});
 	}
 
 	/**
@@ -586,12 +593,14 @@ export class FarmScreenController extends ScreenController {
 		planter.setStatus(this.status);
 		planter.setOnHarvest(() => {
 			this.status.addToInventory(GameItem.Crop, 1);
+			this.status.recordCropHarvest(1);
 			this.status.incrementScore(50);
 			this.view.updateScore(this.status.getFinalScore());
 			this.audio.playSfx("harvest");
 			this.updateCropDisplay();
 			this.clearTargetsForPlanter(planter);
 			this.assignTargetsToAllEmus();
+			this.checkCropWin();
 		});
 		planter.setOnPlant(() => {
 			this.updateCropDisplay();
@@ -871,9 +880,49 @@ export class FarmScreenController extends ScreenController {
 
 
     private updateCropDisplay(): void {
-        this.view.updateCropCount(this.status.getItemCount(GameItem.Crop));
+        this.view.updateCropCount(
+			this.status.getItemCount(GameItem.Crop),
+			this.status.getCropsHarvested(),
+			CROP_WIN_GOAL,
+		);
         this.view.updateMineCount(this.status.getItemCount(GameItem.Mine));
+		if (!this.isDefensePlacementMode) {
+			this.view.setPlacementHint(this.combatHint());
+		}
     }
+
+	private checkCropWin(): void {
+		if (this.isGameOver || this.status.getCropsHarvested() < CROP_WIN_GOAL) {
+			return;
+		}
+		this.winGame();
+	}
+
+	private winGame(): void {
+		if (this.isGameOver) {
+			return;
+		}
+		this.isGameOver = true;
+		this.inRound = false;
+		this.isCountingDown = false;
+		this.waveCleared = false;
+		this.roundClosing = true;
+		this.view.hideVictoryOverlay();
+		this.view.hideCountdown();
+		this.view.hideCombatTip();
+		this.stopTimer();
+		this.view.clearEmus();
+		this.hidePlanningUi();
+		this.emuTargets.clear();
+		this.updateRoundActionButtonState();
+		this.screenSwitcher.switchToScreen({
+			type: "game_over",
+			survivalDays: this.status.getDay(),
+			score: this.getFinalScore(),
+			won: true,
+			cropsHarvested: this.status.getCropsHarvested(),
+		});
+	}
 
 	private checkMineCollisions(): void {
 		if (!this.activeMines.length || !this.emus.length) {
@@ -1168,7 +1217,9 @@ export class FarmScreenController extends ScreenController {
 		this.screenSwitcher.switchToScreen({ 
 			type: "game_over", 
 			survivalDays: this.status.getDay(),
-			score: this.getFinalScore() 
+			score: this.getFinalScore(),
+			won: false,
+			cropsHarvested: this.status.getCropsHarvested(),
 		});
 	}
 

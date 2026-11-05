@@ -1,7 +1,7 @@
 import Konva from "konva";
 import type { View } from "../../types.ts";
 import type { LeaderboardEntry } from "./GameOverScreenModel.ts";
-import { STAGE_HEIGHT, STAGE_WIDTH } from "../../constants.ts";
+import { CROP_WIN_GOAL, STAGE_HEIGHT, STAGE_WIDTH } from "../../constants.ts";
 import { GOLD, INK, PARCHMENT, makeButton, makeRibbon, woodRect } from "../../utils/uiKit.ts";
 import backgroundSrc from "../../../assets/background.png";
 import emuSrc from "../../../assets/Emu.png";
@@ -32,6 +32,7 @@ const COUNT_UP_MS = 900;
 export class GameOverScreenView implements View {
 	private group: Konva.Group;
 	private title: Konva.Text;
+	private subtitle: Konva.Text;
 	private scoreValue: Konva.Text;
 	private daysValue: Konva.Text;
 	private rowsGroup: Konva.Group;
@@ -86,7 +87,7 @@ export class GameOverScreenView implements View {
 		});
 		this.title.offset({ x: this.title.width() / 2, y: this.title.height() / 2 });
 		this.group.add(this.title);
-		this.group.add(new Konva.Text({
+		this.subtitle = new Konva.Text({
 			y: 100,
 			width: STAGE_WIDTH,
 			text: "The emus overran the farm. They will write songs about this.",
@@ -96,7 +97,8 @@ export class GameOverScreenView implements View {
 			fill: "#f3e3bf",
 			align: "center",
 			listening: false,
-		}));
+		});
+		this.group.add(this.subtitle);
 
 		this.scoreValue = this.createStatChip(STAGE_WIDTH / 2 - 210, "FINAL SCORE", "star");
 		this.daysValue = this.createStatChip(STAGE_WIDTH / 2 + 10, "DAYS SURVIVED", "sun");
@@ -288,12 +290,39 @@ export class GameOverScreenView implements View {
 	/**
 	 * Update the final score display
 	 */
-	updateFinalResults(survivalDays: number, score: number): void {
+	updateFinalResults(
+		survivalDays: number,
+		score: number,
+		won: boolean = false,
+		cropsHarvested: number = 0,
+	): void {
 		this.finalDays = survivalDays;
 		this.finalScore = score;
 		this.nameSubmitted = false;
 		this.scoreValue.text(`${score}`);
 		this.daysValue.text(`${survivalDays}`);
+		if (won) {
+			this.title.text("YOU WIN!");
+			this.title.fill("#58d36a");
+			this.title.stroke("#1b4a24");
+			this.title.shadowColor("#9dffb0");
+			this.subtitle.text(
+				`You gathered ${cropsHarvested} crops and hit the harvest goal of ${CROP_WIN_GOAL}. The farm holds.`,
+			);
+			this.noHighScoreMsg.text("You fed the settlement. Sign the Hall of Fame if you earned a spot!");
+		} else {
+			this.title.text("GAME OVER");
+			this.title.fill("#ff5a4a");
+			this.title.stroke("#3a0a06");
+			this.title.shadowColor("#ffb347");
+			this.subtitle.text(
+				cropsHarvested > 0
+					? `The emus overran the farm after ${cropsHarvested}/${CROP_WIN_GOAL} crops harvested.`
+					: "The emus overran the farm. They will write songs about this.",
+			);
+			this.noHighScoreMsg.text("You didn't make the top 10. Better luck next time!");
+		}
+		this.title.offset({ x: this.title.width() / 2, y: this.title.height() / 2 });
 		this.group.getLayer()?.draw();
 	}
 

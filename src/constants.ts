@@ -89,3 +89,6 @@ export const ItemCosts: Record<GameItem, number> = {
 
 // Crop buy cost (separate from sell price)
 export const CROP_BUY_COST = 10;
+
+// Lifetime harvests needed to win the run (not current storage)
+export const CROP_WIN_GOAL = 30;

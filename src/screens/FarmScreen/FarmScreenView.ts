@@ -1,6 +1,6 @@
 import Konva from "konva";
 import type { View } from "../../types.ts";
-import {STAGE_WIDTH, STAGE_HEIGHT, PLANTER_WIDTH, PLANTER_HEIGHT, HUD_HEIGHT, GAME_DURATION} from "../../constants.ts";
+import {STAGE_WIDTH, STAGE_HEIGHT, PLANTER_WIDTH, PLANTER_HEIGHT, HUD_HEIGHT, GAME_DURATION, CROP_WIN_GOAL} from "../../constants.ts";
 import {FarmPlanterController} from "../../components/FarmPlanterComponent/FarmPlanterController.ts";
 import {FarmEmuController} from "../../components/FarmEmuComponent/FarmEmuController.ts";
 import {EMU_MIN_Y} from "../../components/FarmEmuComponent/FarmEmuView.ts";
@@ -441,10 +441,16 @@ export class FarmScreenView implements View {
 			wheat.add(new Konva.Ellipse({ x: -3, y: gy, radiusX: 2, radiusY: 3.4, rotation: -30, fill: "#f2c94c", stroke: "#a8761f", strokeWidth: 0.6 }));
 			wheat.add(new Konva.Ellipse({ x: 3, y: gy, radiusX: 2, radiusY: 3.4, rotation: 30, fill: "#f2c94c", stroke: "#a8761f", strokeWidth: 0.6 }));
 		}
-		this.cropText = this.createStatChip(100, "CROPS", wheat, "Crops in storage. Click an empty planter to plant one");
+		this.cropText = this.createStatChip(
+			100,
+			"CROPS",
+			wheat,
+			`Left is storage for planting. Right is harvested toward the win goal of ${CROP_WIN_GOAL}.`,
+			112,
+		);
 
 		const mineIcon = new Konva.Image({ x: 5, y: 5, width: 20, height: 20, image: mineImage });
-		this.mineText = this.createStatChip(186, "MINES", mineIcon, "Mines in storage. Press M to drop one at the cursor");
+		this.mineText = this.createStatChip(220, "MINES", mineIcon, "Mines in storage. Press M to drop one at the cursor");
 
 		this.mineInstructionText = new Konva.Text({
 			x: 14,
@@ -463,7 +469,7 @@ export class FarmScreenView implements View {
 		this.hudGroup.add(this.mineInstructionText);
 
 		// Day badge
-		const dayBadge = new Konva.Group({ x: 292, y: 7, listening: false });
+		const dayBadge = new Konva.Group({ x: 310, y: 7, listening: false });
 		dayBadge.add(new Konva.Rect({ y: 4, width: 100, height: 36, cornerRadius: 9, fill: "#9a6410" }));
 		dayBadge.add(new Konva.Rect({
 			width: 100,
@@ -489,8 +495,8 @@ export class FarmScreenView implements View {
 		this.hudGroup.add(dayBadge);
 
 		// Timer pill with a draining bar
-		const timer = new Konva.Group({ x: 404, y: 9, listening: false });
-		timer.add(new Konva.Rect({ width: 176, height: 34, cornerRadius: 17, fill: "rgba(30, 18, 8, 0.6)", stroke: WOOD_LIGHT, strokeWidth: 1.5 }));
+		const timer = new Konva.Group({ x: 420, y: 9, listening: false });
+		timer.add(new Konva.Rect({ width: 168, height: 34, cornerRadius: 17, fill: "rgba(30, 18, 8, 0.6)", stroke: WOOD_LIGHT, strokeWidth: 1.5 }));
 		timer.add(new Konva.Circle({ x: 18, y: 17, radius: 10, fill: CREAM, stroke: "#4a2c0a", strokeWidth: 2 }));
 		timer.add(new Konva.Line({ points: [18, 10, 18, 17, 23, 20], stroke: "#4a2c0a", strokeWidth: 2, lineCap: "round", lineJoin: "round" }));
 		this.timerText = new Konva.Text({
@@ -505,8 +511,8 @@ export class FarmScreenView implements View {
 			align: "center",
 		});
 		timer.add(this.timerText);
-		timer.add(new Konva.Rect({ x: 76, y: 12, width: 88, height: 10, cornerRadius: 5, fill: "rgba(0, 0, 0, 0.5)" }));
-		this.timerBarFill = new Konva.Rect({ x: 76, y: 12, width: 88, height: 10, cornerRadius: 5, fill: "#58d36a" });
+		timer.add(new Konva.Rect({ x: 76, y: 12, width: 80, height: 10, cornerRadius: 5, fill: "rgba(0, 0, 0, 0.5)" }));
+		this.timerBarFill = new Konva.Rect({ x: 76, y: 12, width: 80, height: 10, cornerRadius: 5, fill: "#58d36a" });
 		timer.add(this.timerBarFill);
 		this.hudGroup.add(timer);
 
@@ -630,13 +636,30 @@ export class FarmScreenView implements View {
 		this.group.add(this.menuOverlay);
 	}
 
-	private createStatChip(x: number, label: string, icon: Konva.Group | Konva.Shape, tooltip: string): Konva.Text {
+	private createStatChip(
+		x: number,
+		label: string,
+		icon: Konva.Group | Konva.Shape,
+		tooltip: string,
+		width: number = 80,
+	): Konva.Text {
 		const chip = new Konva.Group({ x, y: 9 });
-		chip.add(new Konva.Rect({ width: 80, height: 32, cornerRadius: 16, fill: "rgba(30, 18, 8, 0.6)", stroke: WOOD_LIGHT, strokeWidth: 1.5 }));
+		chip.add(new Konva.Rect({ width, height: 32, cornerRadius: 16, fill: "rgba(30, 18, 8, 0.6)", stroke: WOOD_LIGHT, strokeWidth: 1.5 }));
 		chip.add(new Konva.Circle({ x: 15, y: 16, radius: 12, fill: "rgba(255, 243, 214, 0.15)" }));
 		chip.add(icon);
 		chip.add(new Konva.Text({ x: 32, y: 4, text: label, fontSize: 8, fontFamily: "Arial", fontStyle: "bold", letterSpacing: 1, fill: "#d9c28f" }));
-		const value = new Konva.Text({ x: 32, y: 13, width: 46, text: "0", fontSize: 16, fontFamily: "Arial", fontStyle: "bold", fill: CREAM, wrap: "none", ellipsis: true });
+		const value = new Konva.Text({
+			x: 32,
+			y: 13,
+			width: width - 36,
+			text: "0",
+			fontSize: width > 90 ? 13 : 16,
+			fontFamily: "Arial",
+			fontStyle: "bold",
+			fill: CREAM,
+			wrap: "none",
+			ellipsis: true,
+		});
 		chip.add(value);
 		this.attachHudTooltip(chip, tooltip);
 		this.hudGroup.add(chip);
@@ -1057,8 +1080,8 @@ export class FarmScreenView implements View {
 		this.group.getLayer()?.draw();
 	}
 
-	updateCropCount(count: number): void {
-		this.cropText.text(`${count}`);
+	updateCropCount(stored: number, harvested: number = 0, goal: number = CROP_WIN_GOAL): void {
+		this.cropText.text(`${stored} · ${harvested}/${goal}`);
 		this.group.getLayer()?.draw();
 	}
 
@@ -1280,7 +1303,7 @@ export class FarmScreenView implements View {
 	updateTimer(timeRemaining: number, maxTime: number = GAME_DURATION): void {
 		this.timerText.text(`${timeRemaining}`);
 		const ratio = Math.max(0, Math.min(1, timeRemaining / Math.max(1, maxTime)));
-		this.timerBarFill.width(88 * ratio);
+		this.timerBarFill.width(80 * ratio);
 		this.timerBarFill.visible(ratio > 0);
 		this.timerBarFill.fill(ratio > 0.34 ? "#58d36a" : ratio > 0.17 ? "#f2c14e" : "#ff5a4a");
 		this.timerText.fill(timeRemaining <= 10 && timeRemaining > 0 ? "#ff8a7a" : CREAM);

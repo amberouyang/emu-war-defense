@@ -35,9 +35,14 @@ export class GameOverScreenController extends ScreenController {
 	/**
 	 * Show results screen with final score
 	 */
-	showFinalResults(survivalDays: number, finalScore: number): void {
-		this.model.setFinalResults(survivalDays, finalScore);
-		this.view.updateFinalResults(survivalDays,finalScore);
+	showFinalResults(
+		survivalDays: number,
+		finalScore: number,
+		won: boolean = false,
+		cropsHarvested: number = 0,
+	): void {
+		this.model.setFinalResults(survivalDays, finalScore, won, cropsHarvested);
+		this.view.updateFinalResults(survivalDays, finalScore, won, cropsHarvested);
 
 		// Load and update leaderboard
 		const entries = this.loadLeaderboard();

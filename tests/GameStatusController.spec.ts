@@ -91,4 +91,24 @@ describe("GameStatusController", () => {
 
 		expect(status.hasSavedGame()).toBe(false);
 	});
+
+	it("tracks lifetime crop harvests separately from inventory", () => {
+		const status = createStatus();
+
+		expect(status.getCropsHarvested()).toBe(0);
+
+		status.recordCropHarvest(5);
+		status.addToInventory(GameItem.Crop, 5);
+		expect(status.getCropsHarvested()).toBe(5);
+
+		status.removeFromInventory(GameItem.Crop, 3);
+		expect(status.getItemCount(GameItem.Crop)).toBe(2);
+		expect(status.getCropsHarvested()).toBe(5);
+
+		const reloaded = createStatus();
+		expect(reloaded.getCropsHarvested()).toBe(5);
+
+		reloaded.reset();
+		expect(reloaded.getCropsHarvested()).toBe(0);
+	});
 });

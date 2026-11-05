@@ -17,9 +17,11 @@ describe('GameOverScreenModel', () => {
     it('should correctly set and get final results', () => {
         const score = 500;
         const days = 10;
-        model.setFinalResults(days, score);
+        model.setFinalResults(days, score, true, 30);
         expect(model.getFinalScore()).toBe(score);
         expect(model.getSurvivalDays()).toBe(days);
+        expect(model.didWin()).toBe(true);
+        expect(model.getCropsHarvested()).toBe(30);
     });
 
     it('should correctly set and get leaderboard entries', () => {
