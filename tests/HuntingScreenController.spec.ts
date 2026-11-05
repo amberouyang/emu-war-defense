@@ -160,6 +160,7 @@ describe('HuntingScreenController', () => {
 
     it('should initialize game state', () => {
       expect((controller as any).resetGame).toHaveBeenCalled();
+      expect(mockView.showStartCountdown).toHaveBeenCalledWith(40, expect.any(Function));
       expect(mockModel.startTimer).toHaveBeenCalled();
       expect(mockView.show).toHaveBeenCalled();
       expect((controller as any).running).toBe(true);
@@ -169,6 +170,19 @@ describe('HuntingScreenController', () => {
       expect(mockView.updateAmmo).toHaveBeenCalledWith(100);
       expect(mockView.updateDefeat).toHaveBeenCalledWith(1); // mockEmuController count
       expect(mockView.updateTimer).toHaveBeenCalledWith(40);
+    });
+
+    it('should ignore shooting during the ready countdown', () => {
+      (controller as any).countingDown = true;
+      (controller as any).running = false;
+      (controller as any).playerController = mockPlayerController;
+      (controller as any).bulletControllers = [];
+      (controller as any).keys = new Set();
+
+      const event = new KeyboardEvent('keydown', { code: 'Space', key: ' ' });
+      (controller as any).onKeyDown(event);
+
+      expect(mockPlayerController.shoot).not.toHaveBeenCalled();
     });
 
     it('should attach keyboard listeners', () => {

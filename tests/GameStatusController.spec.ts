@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { GameStatusController } from "../src/controllers/GameStatusController.ts";
-import { GameItem } from "../src/constants.ts";
+import { CROP_WIN_GOAL, GameItem } from "../src/constants.ts";
 
 describe("GameStatusController", () => {
 	beforeEach(() => {
@@ -110,5 +110,16 @@ describe("GameStatusController", () => {
 
 		reloaded.reset();
 		expect(reloaded.getCropsHarvested()).toBe(0);
+	});
+
+	it("can reach the crop win goal through lifetime harvests", () => {
+		const status = createStatus();
+		expect(CROP_WIN_GOAL).toBe(30);
+
+		status.recordCropHarvest(CROP_WIN_GOAL - 1);
+		expect(status.getCropsHarvested()).toBeLessThan(CROP_WIN_GOAL);
+
+		status.recordCropHarvest(1);
+		expect(status.getCropsHarvested()).toBeGreaterThanOrEqual(CROP_WIN_GOAL);
 	});
 });

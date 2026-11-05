@@ -360,6 +360,24 @@ describe("FarmScreenController", () => {
     expect(switcher.switchToScreen).not.toHaveBeenCalled();
   });
 
+  it("offers the egg raid after day 1 instead of the hunt", () => {
+    const { controller } = createController();
+
+    (controller as any).handleMiniGames(2);
+
+    expect(latestView?.showEggMenuOverlay).toHaveBeenCalled();
+    expect(latestView?.showHuntMenuOverlay).not.toHaveBeenCalled();
+  });
+
+  it("still offers the hunt on later scheduled days", () => {
+    const { controller } = createController();
+
+    (controller as any).handleMiniGames(5);
+
+    expect(latestView?.showHuntMenuOverlay).toHaveBeenCalled();
+    expect(latestView?.showEggMenuOverlay).not.toHaveBeenCalled();
+  });
+
   it("machine gun fires at a nearby emu and consumes durability", () => {
     const { controller } = createController();
     const defense = {
