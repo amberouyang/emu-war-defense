@@ -7,13 +7,11 @@ const renderPageMock = vi.fn();
 const showMock = vi.fn();
 const hideMock = vi.fn();
 const destroyMock = vi.fn();
-const showCombatTipMock = vi.fn();
 
 vi.mock("../src/screens/GameIntroScreen/GameIntroScreenView", () => {
     return {
         GameIntroView: vi.fn().mockImplementation(() => ({
             renderPage: renderPageMock,
-            showCombatTip: showCombatTipMock,
             show: showMock,
             hide: hideMock,
             destroy: destroyMock,
@@ -53,7 +51,7 @@ describe("GameIntroController", () => {
         expect(renderPageMock).toHaveBeenLastCalledWith(expect.any(String), false, 1, expect.any(Number));
     });
 
-    it("should open the combat tip after the last briefing page", () => {
+    it("should switch to farm screen when Space is pressed on the last page", () => {
         controller.show();
 
         // 8 briefing pages: indexes 0..7
@@ -61,28 +59,16 @@ describe("GameIntroController", () => {
             window.dispatchEvent(new KeyboardEvent("keydown", { code: "Space" }));
         }
 
-        // On last briefing page, Space opens the tip instead of the farm
         window.dispatchEvent(new KeyboardEvent("keydown", { code: "Space" }));
 
-        expect(showCombatTipMock).toHaveBeenCalled();
-        expect(screenSwitcherMock.switchToScreen).not.toHaveBeenCalled();
+        expect(screenSwitcherMock.switchToScreen).toHaveBeenCalledWith({ type: "farm", newgame: true });
     });
 
-    it("should open the combat tip when Escape is pressed during the briefing", () => {
+    it("should switch to farm screen immediately when Escape is pressed", () => {
         controller.show();
 
-        window.dispatchEvent(new KeyboardEvent("keydown", { code: "Escape" }));
-
-        expect(showCombatTipMock).toHaveBeenCalled();
-        expect(screenSwitcherMock.switchToScreen).not.toHaveBeenCalled();
-    });
-
-    it("should switch to farm from the combat tip", () => {
-        controller.show();
-        window.dispatchEvent(new KeyboardEvent("keydown", { code: "Escape" }));
-
-        const onContinue = showCombatTipMock.mock.calls[0][0] as () => void;
-        onContinue();
+        const escapeEvent = new KeyboardEvent("keydown", { code: "Escape" });
+        window.dispatchEvent(escapeEvent);
 
         expect(screenSwitcherMock.switchToScreen).toHaveBeenCalledWith({ type: "farm", newgame: true });
     });

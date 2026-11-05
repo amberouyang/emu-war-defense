@@ -191,8 +191,14 @@ export class FarmScreenController extends ScreenController {
 		this.view.show();
 		this.view.setPlacementHint(this.combatHint());
 
-		// Show morning screen first, then planning phase
-		this.handleOpenMarket(() => this.prepareFirstRound());
+		// Show morning market first. On a new run, tip players about clicking emus before day 1.
+		this.handleOpenMarket(() => {
+			if (newgame) {
+				this.view.showCombatTip(() => this.prepareFirstRound());
+				return;
+			}
+			this.prepareFirstRound();
+		});
 	}
 
 	private prepareFirstRound(): void {

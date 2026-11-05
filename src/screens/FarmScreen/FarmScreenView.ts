@@ -279,6 +279,7 @@ export class FarmScreenView implements View {
 	private victoryOverlay: Konva.Group;
 	private victoryTitle!: Konva.Text;
 	private victoryBody!: Konva.Text;
+	private combatTipOverlay: Konva.Group;
 	private minesLayer: Konva.Group;
 	private defensesLayer: Konva.Group;
 	private mines: Konva.Image[] = [];
@@ -293,6 +294,7 @@ export class FarmScreenView implements View {
 	private eggContinueHandler: (() => void) | null = null;
 	private eggSkipHandler: (() => void) | null = null;
 	private victoryContinueHandler: (() => void) | null = null;
+	private combatTipContinueHandler: (() => void) | null = null;
 	private registerEmu: ((emu: FarmEmuController) => void) | null = null;
 	private removeEmus: (() => void) | null = null;
 	private timerText: Konva.Text;
@@ -609,6 +611,9 @@ export class FarmScreenView implements View {
 		this.victoryOverlay = this.createVictoryOverlay();
 		this.group.add(this.victoryOverlay);
 
+		this.combatTipOverlay = this.createCombatTipOverlay();
+		this.group.add(this.combatTipOverlay);
+
 		// Planters
 		for (const { x, y } of PLANTER_POSITIONS) {
 			const planter = new FarmPlanterController(this.group, x, y);
@@ -869,6 +874,57 @@ export class FarmScreenView implements View {
 		return popup;
 	}
 
+	private createCombatTipOverlay(): Konva.Group {
+		const { popup, y } = createModal(500, 360);
+		popup.visible(false);
+		popup.add(makeRibbon(STAGE_WIDTH / 2, y - 24, 240, "QUICK TIP"));
+		const cx = STAGE_WIDTH / 2;
+		popup.add(new Konva.Text({
+			x: cx - 220,
+			y: y + 36,
+			width: 440,
+			text: "CLICK OR TAP THE EMUS",
+			fontSize: 28,
+			fontFamily: "Georgia",
+			fontStyle: "bold",
+			fill: INK,
+			align: "center",
+			listening: false,
+		}));
+		popup.add(new Konva.Ellipse({ x: cx, y: y + 168, radiusX: 56, radiusY: 12, fill: "rgba(60, 35, 10, 0.22)", listening: false }));
+		popup.add(new Konva.Image({ x: cx - 48, y: y + 88, width: 96, height: 96, image: emuImage, listening: false }));
+		popup.add(new Konva.Circle({ x: cx + 58, y: y + 108, radius: 28, fill: "white", stroke: "#8f2d1f", strokeWidth: 3, listening: false }));
+		popup.add(new Konva.Text({
+			x: cx + 34,
+			y: y + 100,
+			width: 48,
+			text: "TAP",
+			fontSize: 14,
+			fontFamily: "Arial",
+			fontStyle: "bold",
+			fill: "#8f2d1f",
+			align: "center",
+			listening: false,
+		}));
+		popup.add(new Konva.Text({
+			x: cx - 210,
+			y: y + 200,
+			width: 420,
+			text: "During a raid, click or tap an emu to hurt it. Keep clicking until it falls. That is how you protect the wheat on day 1.",
+			fontSize: 16,
+			fontFamily: "Georgia",
+			fill: "#6d4c41",
+			align: "center",
+			lineHeight: 1.3,
+			listening: false,
+		}));
+		popup.add(makeButton(
+			{ x: cx - 120, y: y + 278, width: 240, height: 54, text: "TO THE FARM", color: "#2fa84f", lip: "#1b6b31", fontSize: 20 },
+			() => this.combatTipContinueHandler?.(),
+		));
+		return popup;
+	}
+
 	private createMinigameOverlay(
 		title: string,
 		description: string,
@@ -1052,6 +1108,23 @@ export class FarmScreenView implements View {
 
 	hideVictoryOverlay(): void {
 		this.victoryOverlay.visible(false);
+		this.group.getLayer()?.draw();
+	}
+
+	showCombatTip(onContinue: () => void): void {
+		this.combatTipContinueHandler = () => {
+			this.hideCombatTip();
+			onContinue();
+		};
+		this.menuOverlay.visible(false);
+		this.huntMenuOverlay.visible(false);
+		this.eggMenuOverlay.visible(false);
+		this.victoryOverlay.visible(false);
+		this.raiseOverlay(this.combatTipOverlay);
+	}
+
+	hideCombatTip(): void {
+		this.combatTipOverlay.visible(false);
 		this.group.getLayer()?.draw();
 	}
 
@@ -1244,6 +1317,7 @@ export class FarmScreenView implements View {
 		this.group.visible(false);
 		this.ambientAnim?.stop();
 		this.hideVictoryOverlay();
+		this.hideCombatTip();
 		this.group.getLayer()?.draw();
 	}
 
