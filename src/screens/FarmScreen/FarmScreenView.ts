@@ -1181,9 +1181,9 @@ export class FarmScreenView implements View {
 	/**
 	 * Update timer display
 	 */
-	updateTimer(timeRemaining: number): void {
+	updateTimer(timeRemaining: number, maxTime: number = GAME_DURATION): void {
 		this.timerText.text(`${timeRemaining}`);
-		const ratio = Math.max(0, Math.min(1, timeRemaining / GAME_DURATION));
+		const ratio = Math.max(0, Math.min(1, timeRemaining / Math.max(1, maxTime)));
 		this.timerBarFill.width(88 * ratio);
 		this.timerBarFill.visible(ratio > 0);
 		this.timerBarFill.fill(ratio > 0.34 ? "#58d36a" : ratio > 0.17 ? "#f2c14e" : "#ff5a4a");

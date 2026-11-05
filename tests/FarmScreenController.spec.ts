@@ -307,7 +307,7 @@ describe("FarmScreenController", () => {
     (controller as any).showPlanningPhase();
 
     expect(latestView?.updateRound).toHaveBeenCalledWith(2);
-    expect(latestView?.updateTimer).toHaveBeenCalledWith(60);
+    expect(latestView?.updateTimer).toHaveBeenCalledWith(60, 60);
   });
 
   it("enables the next-phase button immediately when the last emu is defeated", () => {

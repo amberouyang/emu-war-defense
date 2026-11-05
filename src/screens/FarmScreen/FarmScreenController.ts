@@ -35,6 +35,7 @@ export class FarmScreenController extends ScreenController {
 	private gameTimer: number | null = null;
 	private lastTickTime: number = 0;
 	private timeRemaining: number = GAME_DURATION;
+	private roundDuration: number = GAME_DURATION;
 
 	private status: GameStatusController;
 	private audio: AudioManager;
@@ -160,7 +161,8 @@ export class FarmScreenController extends ScreenController {
 			// Reset model state
 			this.status.reset();
 			this.model.reset();
-			this.timeRemaining = GAME_DURATION;
+			this.roundDuration = this.getRoundDuration();
+			this.timeRemaining = this.roundDuration;
 			this.defenses = [];
 			this.gunCooldowns.clear();
 			this.view.clearDefenses();
@@ -186,7 +188,7 @@ export class FarmScreenController extends ScreenController {
 		this.view.updateScore(this.status.getFinalScore());
 		this.view.hideMenuOverlay();
 		this.resetMines();
-		this.view.updateTimer(this.timeRemaining);
+		this.view.updateTimer(this.timeRemaining, this.roundDuration);
 		this.updateCropDisplay();
 		this.view.show();
 		this.view.setPlacementHint(this.combatHint());
@@ -408,8 +410,9 @@ export class FarmScreenController extends ScreenController {
 		this.setEmusPaused(false);
 		this.view.updateScore(this.status.getFinalScore());
 		this.updateCropDisplay();
-		this.timeRemaining = GAME_DURATION;
-		this.view.updateTimer(this.timeRemaining);
+		this.roundDuration = this.getRoundDuration();
+		this.timeRemaining = this.roundDuration;
+		this.view.updateTimer(this.timeRemaining, this.roundDuration);
 		this.view.updateRound(this.status.getDay());
 		this.view.hideMenuOverlay();
 		this.view.show();
@@ -417,6 +420,10 @@ export class FarmScreenController extends ScreenController {
 		this.spawnEmusForCurrentRound();
 		this.startTimer();
 		this.updateRoundActionButtonState();
+	}
+
+	private getRoundDuration(): number {
+		return this.status.getDay() <= 1 ? 30 : GAME_DURATION;
 	}
 
 	private handleRoundActionButton(): void {
@@ -464,7 +471,7 @@ export class FarmScreenController extends ScreenController {
 				return;
 			}
 			this.timeRemaining = Math.max(0, this.timeRemaining - 1);
-			this.view.updateTimer(this.timeRemaining);
+			this.view.updateTimer(this.timeRemaining, this.roundDuration);
 			if (this.timeRemaining <= 0) {
 				this.endRound();
 			}
@@ -798,7 +805,7 @@ export class FarmScreenController extends ScreenController {
 			this.endRound();
 			return;
 		}
-		this.view.updateTimer(this.timeRemaining);
+		this.view.updateTimer(this.timeRemaining, this.roundDuration);
 		if (this.hasActiveRound()) {
 			this.startTimer();
 		}
@@ -1050,8 +1057,9 @@ export class FarmScreenController extends ScreenController {
 	}
 
 	private syncHudForUpcomingRound(): void {
-		this.timeRemaining = GAME_DURATION;
-		this.view.updateTimer(this.timeRemaining);
+		this.roundDuration = this.getRoundDuration();
+		this.timeRemaining = this.roundDuration;
+		this.view.updateTimer(this.timeRemaining, this.roundDuration);
 		this.view.updateRound(this.status.getDay());
 	}
 
