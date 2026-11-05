@@ -105,18 +105,14 @@ export class HuntingScreenController extends ScreenController {
     this.cleanup();
     this.model.reset();
     
-    // Create rocks (gray rectangles)
+    // Spread rocks and bushes so they don't stack on each other.
     for (let i = 0; i < 12; i++) {
-      const x = Math.random() * (STAGE_WIDTH - 100);
-      const y = GAME_AREA_Y + Math.random() * (GAME_AREA_HEIGHT - 100);
-      let oc: ObstacleController;
-      if ( i < 6 ) {
-        const w = 40 + Math.random() * 40;
-        const h = 40 + Math.random() * 40;
-        oc = new ObstacleController(x, y, w, h, "rock");
-      }else{
-        const size = 30 + Math.random() * 30; // Diameter between 30-60
-        oc = new ObstacleController(x, y, size, size, "bush");
+      const isRock = i < 6;
+      const w = isRock ? 40 + Math.random() * 40 : 30 + Math.random() * 30;
+      const h = isRock ? 40 + Math.random() * 40 : w;
+      const oc = this.placeObstacle(isRock ? "rock" : "bush", w, h);
+      if (!oc) {
+        continue;
       }
       this.obstacleControllers.push(oc);
       this.view.getGroup().add(oc.getNode());
@@ -138,6 +134,29 @@ export class HuntingScreenController extends ScreenController {
       this.emuControllers.push(ec);
       this.view.getGroup().add(ec.getGroup());
     }
+  }
+
+  private placeObstacle(
+    type: "rock" | "bush",
+    w: number,
+    h: number,
+    padding: number = 22,
+  ): ObstacleController | null {
+    const existing = this.obstacleControllers.map((c) => c.getModel());
+    for (let attempt = 0; attempt < 50; attempt++) {
+      const x = 16 + Math.random() * Math.max(1, STAGE_WIDTH - w - 32);
+      const y = GAME_AREA_Y + 16 + Math.random() * Math.max(1, GAME_AREA_HEIGHT - h - 32);
+      const overlaps = existing.some((o) => !(
+        x + w + padding <= o.x
+        || o.x + o.w + padding <= x
+        || y + h + padding <= o.y
+        || o.y + o.h + padding <= y
+      ));
+      if (!overlaps) {
+        return new ObstacleController(x, y, w, h, type);
+      }
+    }
+    return null;
   }
 
   private onKeyDown(e: KeyboardEvent) {
