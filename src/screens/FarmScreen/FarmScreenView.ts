@@ -280,6 +280,9 @@ export class FarmScreenView implements View {
 	private victoryTitle!: Konva.Text;
 	private victoryBody!: Konva.Text;
 	private combatTipOverlay: Konva.Group;
+	private countdownOverlay: Konva.Group;
+	private countdownLabel!: Konva.Text;
+	private countdownToken = 0;
 	private minesLayer: Konva.Group;
 	private defensesLayer: Konva.Group;
 	private mines: Konva.Image[] = [];
@@ -614,6 +617,9 @@ export class FarmScreenView implements View {
 		this.combatTipOverlay = this.createCombatTipOverlay();
 		this.group.add(this.combatTipOverlay);
 
+		this.countdownOverlay = this.createCountdownOverlay();
+		this.group.add(this.countdownOverlay);
+
 		// Planters
 		for (const { x, y } of PLANTER_POSITIONS) {
 			const planter = new FarmPlanterController(this.group, x, y);
@@ -874,6 +880,35 @@ export class FarmScreenView implements View {
 		return popup;
 	}
 
+	private createCountdownOverlay(): Konva.Group {
+		const overlay = new Konva.Group({ visible: false, listening: false });
+		overlay.add(new Konva.Rect({
+			width: STAGE_WIDTH,
+			height: STAGE_HEIGHT,
+			fill: "rgba(20, 10, 2, 0.45)",
+		}));
+		this.countdownLabel = new Konva.Text({
+			x: 0,
+			y: STAGE_HEIGHT / 2 - 60,
+			width: STAGE_WIDTH,
+			text: "3",
+			fontSize: 120,
+			fontFamily: "Arial Black, Arial",
+			fontStyle: "bold",
+			fill: GOLD,
+			stroke: "#4a2608",
+			strokeWidth: 8,
+			fillAfterStrokeEnabled: true,
+			align: "center",
+			shadowColor: "#2a1404",
+			shadowBlur: 0,
+			shadowOffsetY: 8,
+			shadowOpacity: 0.55,
+		});
+		overlay.add(this.countdownLabel);
+		return overlay;
+	}
+
 	private createCombatTipOverlay(): Konva.Group {
 		const { popup, y } = createModal(500, 360);
 		popup.visible(false);
@@ -1128,6 +1163,67 @@ export class FarmScreenView implements View {
 		this.group.getLayer()?.draw();
 	}
 
+	showCountdown(steps: string[], onComplete: () => void): void {
+		const token = ++this.countdownToken;
+		this.menuOverlay.visible(false);
+		this.huntMenuOverlay.visible(false);
+		this.eggMenuOverlay.visible(false);
+		this.victoryOverlay.visible(false);
+		this.combatTipOverlay.visible(false);
+		this.raiseOverlay(this.countdownOverlay);
+		this.playCountdownStep(steps, 0, token, onComplete);
+	}
+
+	hideCountdown(): void {
+		this.countdownToken++;
+		this.countdownOverlay.visible(false);
+		this.countdownLabel.scale({ x: 1, y: 1 });
+		this.countdownLabel.opacity(1);
+		this.group.getLayer()?.draw();
+	}
+
+	private playCountdownStep(steps: string[], index: number, token: number, onComplete: () => void): void {
+		if (token !== this.countdownToken) {
+			return;
+		}
+		if (index >= steps.length) {
+			this.hideCountdown();
+			onComplete();
+			return;
+		}
+
+		const text = steps[index];
+		const isGo = /go|start|plant/i.test(text);
+		this.countdownLabel.text(text);
+		this.countdownLabel.fontSize(isGo ? 96 : 120);
+		this.countdownLabel.fill(isGo ? "#58d36a" : GOLD);
+		this.countdownLabel.scale({ x: 0.35, y: 0.35 });
+		this.countdownLabel.opacity(1);
+		this.countdownOverlay.visible(true);
+		this.countdownOverlay.moveToTop();
+		this.group.getLayer()?.batchDraw();
+
+		this.countdownLabel.to({
+			scaleX: 1.08,
+			scaleY: 1.08,
+			duration: 0.28,
+			easing: Konva.Easings.BackEaseOut,
+			onFinish: () => {
+				if (token !== this.countdownToken) {
+					return;
+				}
+				this.countdownLabel.to({
+					scaleX: 1,
+					scaleY: 1,
+					opacity: 0,
+					duration: 0.42,
+					easing: Konva.Easings.EaseIn,
+					onFinish: () => this.playCountdownStep(steps, index + 1, token, onComplete),
+				});
+			},
+		});
+	}
+
 	private presentMinigameOverlay(overlay: Konva.Group, other: Konva.Group): void {
 		other.visible(false);
 		this.victoryOverlay.visible(false);
@@ -1318,6 +1414,7 @@ export class FarmScreenView implements View {
 		this.ambientAnim?.stop();
 		this.hideVictoryOverlay();
 		this.hideCombatTip();
+		this.hideCountdown();
 		this.group.getLayer()?.draw();
 	}
 

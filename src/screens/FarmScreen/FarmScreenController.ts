@@ -51,6 +51,7 @@ export class FarmScreenController extends ScreenController {
 	private isDefensePlacementMode: boolean = false;
 	private isGameOver: boolean = false;
 	private isPaused: boolean = false;
+	private isCountingDown: boolean = false;
 	private inRound: boolean = false;
 	private waveCleared: boolean = false;
 	private roundClosing: boolean = false;
@@ -403,10 +404,12 @@ export class FarmScreenController extends ScreenController {
 		this.view.setPlacementCursor(false);
 		this.view.setPlacementHint(this.combatHint());
 		this.planningPhase?.hide();
-		this.inRound = true;
+		this.inRound = false;
+		this.isCountingDown = true;
 		this.waveCleared = false;
 		this.roundClosing = false;
 		this.view.hideVictoryOverlay();
+		this.view.hideCombatTip();
 		this.setEmusPaused(false);
 		this.view.updateScore(this.status.getFinalScore());
 		this.updateCropDisplay();
@@ -416,7 +419,17 @@ export class FarmScreenController extends ScreenController {
 		this.view.updateRound(this.status.getDay());
 		this.view.hideMenuOverlay();
 		this.view.show();
+		this.updateRoundActionButtonState();
 
+		this.view.showCountdown(["3", "2", "1", "GO!"], () => this.beginRaidAfterCountdown());
+	}
+
+	private beginRaidAfterCountdown(): void {
+		if (this.isGameOver) {
+			return;
+		}
+		this.isCountingDown = false;
+		this.inRound = true;
 		this.spawnEmusForCurrentRound();
 		this.startTimer();
 		this.updateRoundActionButtonState();
@@ -742,11 +755,14 @@ export class FarmScreenController extends ScreenController {
 
 
 	private handleMenuButton(): void {
+		if (this.isCountingDown) {
+			return;
+		}
 		this.pauseGame();
 	}
 
 	private pauseGame(): void {
-		if (this.isPaused || this.isGameOver) {
+		if (this.isPaused || this.isGameOver || this.isCountingDown) {
 			return;
 		}
 		this.isPaused = true;
@@ -787,6 +803,8 @@ export class FarmScreenController extends ScreenController {
 	private handleMenuSaveAndExit(): void {
         this.status.save();
 		this.isPaused = false;
+		this.isCountingDown = false;
+		this.view.hideCountdown();
 		this.setEmusPaused(false);
 		this.hidePlanningUi();
 		this.screenSwitcher.switchToScreen({ type: "main_menu" });
@@ -1138,8 +1156,10 @@ export class FarmScreenController extends ScreenController {
 		}
 		this.isGameOver = true;
 		this.inRound = false;
+		this.isCountingDown = false;
 		this.waveCleared = false;
 		this.view.hideVictoryOverlay();
+		this.view.hideCountdown();
 		this.stopTimer();
         this.view.clearEmus();
 		this.hidePlanningUi();

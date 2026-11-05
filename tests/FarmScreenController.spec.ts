@@ -29,6 +29,8 @@ class FakeFarmScreenView {
   hideVictoryOverlay = vi.fn();
   showCombatTip = vi.fn((onContinue: () => void) => onContinue());
   hideCombatTip = vi.fn();
+  showCountdown = vi.fn((_steps: string[], onComplete: () => void) => onComplete());
+  hideCountdown = vi.fn();
   removeMineSprite = vi.fn();
   setDefensePlaceClickHandler = vi.fn();
   setPlanningPhaseMode = vi.fn();
