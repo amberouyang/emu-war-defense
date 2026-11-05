@@ -76,10 +76,17 @@ class App implements ScreenSwitcher {
 		this.menuController.show();
 		this.audioManager.playBgm("menu");
 
-		const devScreen = new URLSearchParams(window.location.search).get("screen");
-		if (devScreen === "raid") {
+		// Local vite only: jump into egg raid for quick testing.
+		// Production builds (push / GitHub Pages) ignore this and stay on the menu.
+		// Override locally with ?screen=menu or ?screen=intro
+		const params = new URLSearchParams(window.location.search);
+		let startScreen = params.get("screen");
+		if (!startScreen && import.meta.env.DEV) {
+			startScreen = "raid";
+		}
+		if (startScreen === "raid") {
 			this.switchToScreen({ type: "minigame1_raid" });
-		} else if (devScreen === "intro") {
+		} else if (startScreen === "intro") {
 			this.switchToScreen({ type: "game_intro" });
 		}
 	}
