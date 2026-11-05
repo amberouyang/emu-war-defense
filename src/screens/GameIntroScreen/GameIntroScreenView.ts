@@ -325,17 +325,6 @@ export class GameIntroView {
 
 		this.drawButtons(currentPage, isLastPage);
 
-		this.group.add(new Konva.Text({
-			y: PANEL.y + PANEL.height - 28,
-			width: STAGE_WIDTH,
-			text: "Space or Right arrow: next      Left arrow: back      Esc: skip briefing",
-			fontSize: 12,
-			fontFamily: "Arial",
-			fill: COLORS.muted,
-			align: "center",
-			listening: false,
-		}));
-
 		content.to({ x: 0, opacity: 1, duration: 0.25, easing: Konva.Easings.EaseOut });
 		this.slamStamp(stamp);
 		this.typeBody(body);
