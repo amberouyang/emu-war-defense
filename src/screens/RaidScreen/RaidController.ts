@@ -15,7 +15,7 @@ import {
 } from "./RaidModel";
 import { RaidView } from "./RaidView";
 
-type RaidPhase = "idle" | "intro" | "playing" | "results";
+type RaidPhase = "idle" | "intro" | "countdown" | "playing" | "results";
 
 const RETURN_DELAY_SECONDS = 5;
 
@@ -82,6 +82,7 @@ export class RaidController extends ScreenController {
 
 	override hide(): void {
 		this.clearTimers();
+		this.view.hideStartCountdown();
 		this.phase = "idle";
 		super.hide();
 	}
@@ -126,11 +127,14 @@ export class RaidController extends ScreenController {
 
 	private handleIntroStart(): void {
 		if (this.phase !== "intro") return;
-		this.phase = "playing";
+		this.phase = "countdown";
 		this.view.hideIntro();
-		this.view.showGo();
-		this.audio.playSfx("run", 0.5);
-		this.startTimer();
+		this.view.showStartCountdown(MINIGAME_DURATION, () => {
+			if (this.phase !== "countdown") return;
+			this.phase = "playing";
+			this.audio.playSfx("run", 0.5);
+			this.startTimer();
+		});
 	}
 
 	private startTimer(): void {

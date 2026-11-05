@@ -358,6 +358,10 @@ export class RaidView implements View {
 
 	private banner: Konva.Text;
 	private goText: Konva.Text;
+	private countdownOverlay: Konva.Group;
+	private countdownLabel!: Konva.Text;
+	private countdownHint!: Konva.Text;
+	private countdownToken = 0;
 
 	private introGroup: Konva.Group;
 
@@ -547,6 +551,8 @@ export class RaidView implements View {
 		// --- Overlays ---
 		this.introGroup = this.createIntro(onIntroStartClick);
 		this.group.add(this.introGroup);
+		this.countdownOverlay = this.createCountdownOverlay();
+		this.group.add(this.countdownOverlay);
 
 		this.resultsTitle = new Konva.Text({});
 		this.resultsStats = new Konva.Text({});
@@ -647,7 +653,7 @@ export class RaidView implements View {
 		intro.add(rowText(460, "Reach the flag to escape with your loot."));
 
 		intro.add(createClockIcon(215, 500));
-		intro.add(rowText(500, "Run out of time and the emus take it all back."));
+		intro.add(rowText(500, `You start with only ${MINIGAME_DURATION} seconds. Eggs buy you more time.`));
 
 		intro.add(centered(536, "Tip: eggs glint in the dark, so watch for sparkles.", 15, COLORS.mutedText, {
 			fontStyle: "italic",
@@ -997,6 +1003,110 @@ export class RaidView implements View {
 			easing: Konva.Easings.BackEaseOut,
 			onFinish: () => {
 				this.goText.to({ opacity: 0, duration: 0.35, onFinish: () => this.goText.visible(false) });
+			},
+		});
+	}
+
+	private createCountdownOverlay(): Konva.Group {
+		const overlay = new Konva.Group({ visible: false, listening: false });
+		overlay.add(new Konva.Rect({
+			width: STAGE_WIDTH,
+			height: STAGE_HEIGHT,
+			fill: "rgba(5, 6, 20, 0.55)",
+		}));
+		this.countdownHint = new Konva.Text({
+			y: STAGE_HEIGHT / 2 - 110,
+			width: STAGE_WIDTH,
+			text: "",
+			fontSize: 22,
+			fontFamily: FONT,
+			fontStyle: "bold",
+			fill: COLORS.warn,
+			align: "center",
+			shadowColor: "#000",
+			shadowBlur: 8,
+			shadowOpacity: 0.8,
+		});
+		this.countdownLabel = new Konva.Text({
+			x: STAGE_WIDTH / 2,
+			y: STAGE_HEIGHT / 2,
+			text: "3",
+			fontSize: 110,
+			fontFamily: TITLE_FONT,
+			fill: COLORS.gold,
+			stroke: "#5a3a12",
+			strokeWidth: 4,
+			align: "center",
+			shadowColor: "#000",
+			shadowBlur: 12,
+			shadowOpacity: 0.85,
+		});
+		this.countdownLabel.offsetX(this.countdownLabel.width() / 2);
+		this.countdownLabel.offsetY(this.countdownLabel.height() / 2);
+		overlay.add(this.countdownHint);
+		overlay.add(this.countdownLabel);
+		return overlay;
+	}
+
+	showStartCountdown(seconds: number, onComplete: () => void): void {
+		const token = ++this.countdownToken;
+		const steps = [`${seconds}s`, "3", "2", "1", "GO!"];
+		this.countdownHint.text(`You only have ${seconds} seconds. Grab eggs for more time!`);
+		this.countdownOverlay.visible(true);
+		this.countdownOverlay.moveToTop();
+		this.playCountdownStep(steps, 0, token, onComplete);
+	}
+
+	hideStartCountdown(): void {
+		this.countdownToken++;
+		this.countdownOverlay.visible(false);
+		this.countdownLabel.scale({ x: 1, y: 1 });
+		this.countdownLabel.opacity(1);
+		this.group.getLayer()?.batchDraw();
+	}
+
+	private playCountdownStep(steps: string[], index: number, token: number, onComplete: () => void): void {
+		if (token !== this.countdownToken) {
+			return;
+		}
+		if (index >= steps.length) {
+			this.hideStartCountdown();
+			onComplete();
+			return;
+		}
+
+		const text = steps[index];
+		const isGo = text === "GO!";
+		const isWarning = index === 0;
+		this.countdownHint.visible(isWarning || index < steps.length - 1);
+		this.countdownLabel.text(text);
+		this.countdownLabel.fontSize(isGo ? 96 : isWarning ? 88 : 110);
+		this.countdownLabel.fill(isGo ? COLORS.good : isWarning ? COLORS.warn : COLORS.gold);
+		this.countdownLabel.offsetX(this.countdownLabel.width() / 2);
+		this.countdownLabel.offsetY(this.countdownLabel.height() / 2);
+		this.countdownLabel.scale({ x: 0.35, y: 0.35 });
+		this.countdownLabel.opacity(1);
+		this.countdownOverlay.visible(true);
+		this.countdownOverlay.moveToTop();
+		this.group.getLayer()?.batchDraw();
+
+		this.countdownLabel.to({
+			scaleX: 1.08,
+			scaleY: 1.08,
+			duration: 0.28,
+			easing: Konva.Easings.BackEaseOut,
+			onFinish: () => {
+				if (token !== this.countdownToken) {
+					return;
+				}
+				this.countdownLabel.to({
+					scaleX: 1,
+					scaleY: 1,
+					opacity: 0,
+					duration: isWarning ? 0.55 : 0.4,
+					easing: Konva.Easings.EaseIn,
+					onFinish: () => this.playCountdownStep(steps, index + 1, token, onComplete),
+				});
 			},
 		});
 	}
