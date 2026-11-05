@@ -3,7 +3,7 @@ export const MAZE_WIDTH = 20;
 export const MAZE_HEIGHT = 15;
 
 // The starting time for the minigame (in seconds)
-export const MINIGAME_DURATION = 30;
+export const MINIGAME_DURATION = 15;
 export const EGG_COUNT = 5; // Number of eggs to spawn
 export const EGG_TIME_BONUS = 2; // Seconds added for each egg collected
 export const DIG_COOLDOWN_MS = 450; // Delay between wall breaks

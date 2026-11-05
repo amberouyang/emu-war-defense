@@ -7,6 +7,7 @@ import {
 	MAZE_HEIGHT,
 	EGG_COUNT,
 	EGG_TIME_BONUS,
+	MINIGAME_DURATION,
 	type Direction,
 } from "./RaidModel";
 import flagSrc from "../../../assets/flag.png";
@@ -501,7 +502,7 @@ export class RaidView implements View {
 			height: 22,
 			offsetX: 28,
 			offsetY: 11,
-			text: "30s",
+			text: `${MINIGAME_DURATION}s`,
 			fontSize: 20,
 			fontFamily: FONT,
 			fontStyle: "bold",
