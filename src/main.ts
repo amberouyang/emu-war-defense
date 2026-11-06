@@ -76,14 +76,9 @@ class App implements ScreenSwitcher {
 		this.menuController.show();
 		this.audioManager.playBgm("menu");
 
-		// Local vite only: jump into the hunt for quick testing.
-		// Production builds (push / GitHub Pages) ignore this and stay on the menu.
-		// Override locally with ?screen=menu, ?screen=raid, or ?screen=intro
-		const params = new URLSearchParams(window.location.search);
-		let startScreen = params.get("screen");
-		if (!startScreen && import.meta.env.DEV) {
-			startScreen = "hunt";
-		}
+		// Optional local testing shortcuts. Production stays on the menu.
+		// Examples: ?screen=hunt  ?screen=raid  ?screen=intro
+		const startScreen = new URLSearchParams(window.location.search).get("screen");
 		if (startScreen === "hunt") {
 			this.switchToScreen({ type: "minigame2_intro" });
 		} else if (startScreen === "raid") {
@@ -114,10 +109,13 @@ class App implements ScreenSwitcher {
 				break;
 
 			case "farm":
-				// Start the game (which also shows the game screen)
 				this.audioManager.playBgm("farm");
-				this.farmController.startGame(screen.newgame);
-				// startGame() will call startRound() or show planning phase
+				if (screen.resume) {
+					// Coming back from egg raid / hunt: keep day progress, don't reopen market.
+					this.farmController.resumeFromMinigame();
+				} else {
+					this.farmController.startGame(screen.newgame);
+				}
 				break;
 
 			case "minigame2_intro":

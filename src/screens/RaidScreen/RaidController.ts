@@ -282,7 +282,7 @@ export class RaidController extends ScreenController {
 
 	private finishRaid(): void {
 		if (this.phase !== "results") return;
-		this.screenSwitcher.switchToScreen({ type: "farm", newgame: false });
+		this.screenSwitcher.switchToScreen({ type: "farm", newgame: false, resume: true });
 	}
 
 	private clearTimers(): void {

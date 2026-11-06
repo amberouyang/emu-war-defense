@@ -52,6 +52,8 @@ export class FarmScreenController extends ScreenController {
 	private isGameOver: boolean = false;
 	private isPaused: boolean = false;
 	private isCountingDown: boolean = false;
+	private isSuspended: boolean = false;
+	private hasActiveFarmRun: boolean = false;
 	private inRound: boolean = false;
 	private waveCleared: boolean = false;
 	private roundClosing: boolean = false;
@@ -119,7 +121,7 @@ export class FarmScreenController extends ScreenController {
 			return;
 		}
 
-		if (this.isPaused) {
+		if (this.isPaused || this.isSuspended || this.isCountingDown) {
 			this.lastTickTime = timestamp;
 			requestAnimationFrame(this.gameLoop);
 			return;
@@ -152,9 +154,44 @@ export class FarmScreenController extends ScreenController {
 	/**
 	 * Start the game
 	 */
+	/**
+	 * Return from egg raid / hunt without restarting the day or market.
+	 * If the hunt was opened for testing with no farm run in progress, go to the menu.
+	 */
+	resumeFromMinigame(): void {
+		if (!this.hasActiveFarmRun) {
+			this.screenSwitcher.switchToScreen({ type: "main_menu" });
+			return;
+		}
+		this.isSuspended = false;
+		this.isGameOver = false;
+		this.isPaused = false;
+		this.isCountingDown = false;
+		this.view.hideCountdown();
+		this.view.hideEggMenuOverlay();
+		this.view.hideHuntMenuOverlay();
+		this.view.hideVictoryOverlay();
+		this.view.hideMenuOverlay();
+		this.view.show();
+		this.updateCropDisplay();
+		this.view.updateScore(this.status.getFinalScore());
+		this.syncHudForUpcomingRound();
+		this.showPlanningPhase();
+		this.ensureGameLoopRunning();
+	}
+
+	override hide(): void {
+		this.isSuspended = true;
+		this.view.hideCountdown();
+		super.hide();
+	}
+
 	startGame(newgame: boolean): void {	
 		const wasGameOver = this.isGameOver;
 		this.isGameOver = false;
+		this.isSuspended = false;
+		this.isCountingDown = false;
+		this.hasActiveFarmRun = true;
 		if (wasGameOver) {
 			this.ensureGameLoopRunning();
 		}
@@ -402,6 +439,7 @@ export class FarmScreenController extends ScreenController {
 		this.isDefensePlacementMode = false;
 		this.selectedDefenseType = null;
 		this.isPaused = false;
+		this.isSuspended = false;
 		this.view.setPlacementCursor(false);
 		this.view.setPlacementHint(this.combatHint());
 		this.planningPhase?.hide();
@@ -411,6 +449,9 @@ export class FarmScreenController extends ScreenController {
 		this.roundClosing = false;
 		this.view.hideVictoryOverlay();
 		this.view.hideCombatTip();
+		this.view.clearEmus();
+		this.emus = [];
+		this.emuTargets.clear();
 		this.setEmusPaused(false);
 		this.view.updateScore(this.status.getFinalScore());
 		this.updateCropDisplay();
@@ -422,14 +463,26 @@ export class FarmScreenController extends ScreenController {
 		this.view.show();
 		this.updateRoundActionButtonState();
 
+		if (!this.getPlantersWithCrop().length) {
+			this.isCountingDown = false;
+			this.showPlanningPhase();
+			this.view.setPlacementHint("Plant some crops before starting the raid.");
+			return;
+		}
+
 		this.view.showCountdown(["3", "2", "1", "GO!"], () => this.beginRaidAfterCountdown());
 	}
 
 	private beginRaidAfterCountdown(): void {
-		if (this.isGameOver) {
+		if (this.isGameOver || this.isSuspended) {
 			return;
 		}
 		this.isCountingDown = false;
+		if (!this.getPlantersWithCrop().length) {
+			this.showPlanningPhase();
+			this.view.setPlacementHint("Plant some crops before starting the raid.");
+			return;
+		}
 		this.inRound = true;
 		this.spawnEmusForCurrentRound();
 		this.startTimer();
@@ -619,7 +672,11 @@ export class FarmScreenController extends ScreenController {
 	}
 
 	private hasActiveRound(): boolean {
-		return this.inRound && !this.isPlanningPhase && !this.isDefensePlacementMode;
+		return this.inRound
+			&& !this.isPlanningPhase
+			&& !this.isDefensePlacementMode
+			&& !this.isCountingDown
+			&& !this.isSuspended;
 	}
 
 	private checkForCropLoss(): void {
@@ -635,8 +692,9 @@ export class FarmScreenController extends ScreenController {
 	private assignTargetToEmu(emu: FarmEmuController): void {
 		const candidates = this.getPlantersWithCrop();
 		if (!candidates.length) {
-			// No crops left – game is over!!!!:
-			this.endGame();
+			if (this.hasActiveRound()) {
+				this.endGame();
+			}
 			emu.clearTarget();
 			this.emuTargets.set(emu, null);
 			return;
@@ -813,6 +871,7 @@ export class FarmScreenController extends ScreenController {
         this.status.save();
 		this.isPaused = false;
 		this.isCountingDown = false;
+		this.hasActiveFarmRun = false;
 		this.view.hideCountdown();
 		this.setEmusPaused(false);
 		this.hidePlanningUi();
@@ -904,6 +963,7 @@ export class FarmScreenController extends ScreenController {
 		this.isGameOver = true;
 		this.inRound = false;
 		this.isCountingDown = false;
+		this.hasActiveFarmRun = false;
 		this.waveCleared = false;
 		this.roundClosing = true;
 		this.view.hideVictoryOverlay();
@@ -1205,6 +1265,7 @@ export class FarmScreenController extends ScreenController {
 		this.isGameOver = true;
 		this.inRound = false;
 		this.isCountingDown = false;
+		this.hasActiveFarmRun = false;
 		this.waveCleared = false;
 		this.view.hideVictoryOverlay();
 		this.view.hideCountdown();

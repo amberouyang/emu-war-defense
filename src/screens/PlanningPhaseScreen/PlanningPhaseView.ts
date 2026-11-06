@@ -15,8 +15,8 @@ export interface View {
 const DISPLAY = "Arial Black, Arial";
 const FONT = "Arial";
 
-const BRIEFING = { x: 110, y: 58, width: 580, height: 290 };
-const CTA = { x: STAGE_WIDTH / 2 - 135, y: 440, width: 270, height: 56 };
+const BRIEFING = { x: 110, y: 58, width: 580, height: 330 };
+const CTA = { x: STAGE_WIDTH / 2 - 135, y: 450, width: 270, height: 56 };
 const TRAY = { x: 110, y: 548, width: 580, height: 136 };
 const CARD = { width: 168, height: 96, gap: 14 };
 
@@ -245,9 +245,9 @@ export class PlanningPhaseView implements View {
 		// Field intel strip with a rotating historical fact.
 		this.intelBox = new Konva.Rect({
 			x: x + 22,
-			y: y + 212,
+			y: y + 230,
 			width: width - 44,
-			height: 62,
+			height: 78,
 			fill: "rgba(200, 162, 90, 0.12)",
 			stroke: "rgba(200, 162, 90, 0.5)",
 			strokeWidth: 1,
@@ -257,7 +257,7 @@ export class PlanningPhaseView implements View {
 		this.tutorialPanel.add(this.intelBox);
 		this.tutorialPanel.add(new Konva.Text({
 			x: x + 36,
-			y: y + 222,
+			y: y + 242,
 			text: "FIELD INTEL",
 			fontSize: 11,
 			fontFamily: FONT,
@@ -267,13 +267,13 @@ export class PlanningPhaseView implements View {
 		}));
 		this.intelText = new Konva.Text({
 			x: x + 36,
-			y: y + 240,
+			y: y + 264,
 			width: width - 72,
 			text: "",
 			fontSize: 12,
 			fontFamily: FONT,
 			fill: COLORS.text,
-			lineHeight: 1.25,
+			lineHeight: 1.35,
 		});
 		this.tutorialPanel.add(this.intelText);
 	}

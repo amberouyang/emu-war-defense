@@ -369,6 +369,48 @@ describe("FarmScreenController", () => {
     expect(latestView?.showHuntMenuOverlay).not.toHaveBeenCalled();
   });
 
+  it("resumes from a minigame into planning without restarting the day", () => {
+    const { controller, status } = createController();
+    status.endDay();
+    (controller as any).hasActiveFarmRun = true;
+
+    controller.resumeFromMinigame();
+
+    expect(latestView?.show).toHaveBeenCalled();
+    expect(latestPlanningPhase?.show).toHaveBeenCalledWith(2);
+    expect((controller as any).isPlanningPhase).toBe(true);
+    expect((controller as any).isCountingDown).toBe(false);
+    expect((controller as any).isSuspended).toBe(false);
+  });
+
+  it("sends orphaned minigame exits to the menu instead of day 1 farm", () => {
+    const { controller, switcher } = createController();
+
+    controller.resumeFromMinigame();
+
+    expect(switcher.switchToScreen).toHaveBeenCalledWith({ type: "main_menu" });
+    expect(latestPlanningPhase?.show).not.toHaveBeenCalled();
+  });
+
+  it("does not auto end during countdown when fields are empty", () => {
+    const { controller, switcher } = createController();
+    (controller as any).planters = [
+      {
+        isEmpty: vi.fn(() => true),
+        getView: vi.fn(),
+        takeDamage: vi.fn(),
+      },
+    ];
+
+    controller.startRound();
+
+    expect(latestView?.showCountdown).not.toHaveBeenCalled();
+    expect(latestPlanningPhase?.show).toHaveBeenCalled();
+    expect(switcher.switchToScreen).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: "game_over" }),
+    );
+  });
+
   it("still offers the hunt on later scheduled days", () => {
     const { controller } = createController();
 

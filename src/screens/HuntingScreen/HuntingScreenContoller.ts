@@ -228,7 +228,7 @@ export class HuntingScreenController extends ScreenController {
     window.removeEventListener("keyup", this.onKeyUp);
     this.status.incrementScore(this.model.getDefeat() * 1);
     this.view.hidePauseOverlay();
-    this.screenSwitcher.switchToScreen({ type: "farm", newgame: false });
+    this.screenSwitcher.switchToScreen({ type: "farm", newgame: false, resume: true });
   }
 
   private gameLoop = () => {
